@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+
+:root {
+    --font-family: 'Comfortaa', sans-serif;
+
+    --search-gradient: linear-gradient(45deg, #cdffd8, #94b9ff);
+    --login-gradient: linear-gradient(45deg, #fff7ad, #ffa9f9);
+
+    --search-color: #d9d9d9;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+}
+
+#drop-zone {
+    background-color: var(--search-color);
+    display: block;
+    width: 50%;
+    height: 80vh;
+    margin: 0 5% 0 auto;
+}
