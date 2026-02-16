@@ -7,6 +7,7 @@
     --login-gradient: linear-gradient(45deg, #fff7ad, #ffa9f9);
 
     --search-color: #d9d9d9;
+    --hover-search-color: #c9c9c9;
 }
 
 * {
@@ -20,8 +21,22 @@ body {
 
 #drop-zone {
     background-color: var(--search-color);
-    display: block;
-    width: 50%;
+    display: flex;
+    width: 40%;
     height: 80vh;
-    margin: 0 5% 0 auto;
+    margin: 5vh 5% 0 auto;
+    border: 0.5px solid ;
+    border-radius: 5%;
+    justify-content: center;
+    align-items: center;
+    transition: transform .25s ease-in-out;
+}
+
+#drop-zone:hover {
+    background-color: var(--hover-search-color);
+    cursor: pointer;
+}
+
+#upload {
+    display: none;
 }
