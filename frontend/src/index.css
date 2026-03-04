@@ -22,14 +22,25 @@ body {
 #drop-zone {
     background-color: var(--search-color);
     display: flex;
+    flex-direction: column;
     width: 40%;
     height: 80vh;
     margin: 5vh 5% 0 auto;
-    border: 0.5px solid ;
+    border: 3px solid ;
     border-radius: 5%;
     justify-content: center;
     align-items: center;
     transition: transform .25s ease-in-out;
+}
+
+#drop-zone * {
+    margin: 2vh 0;
+}
+
+#drop-zone p {
+    max-width: 20vw;
+    font-size: clamp(8px, 2vw, 16px);
+    text-align: center;
 }
 
 #drop-zone:hover {
