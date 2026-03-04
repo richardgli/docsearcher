@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap');
+
+:root {
+    --font-family: 'Comfortaa', sans-serif;
+
+    --search-gradient: linear-gradient(45deg, #cdffd8, #94b9ff);
+    --login-gradient: linear-gradient(45deg, #fff7ad, #ffa9f9);
+
+    --search-color: #d9d9d9;
+    --hover-search-color: #c9c9c9;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+}
+
+#drop-zone {
+    background-color: var(--search-color);
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    height: 80vh;
+    margin: 5vh 5% 0 auto;
+    border: 3px solid ;
+    border-radius: 5%;
+    justify-content: center;
+    align-items: center;
+    transition: transform .25s ease-in-out;
+}
+
+#drop-zone * {
+    margin: 2vh 0;
+}
+
+#drop-zone p {
+    max-width: 20vw;
+    font-size: clamp(8px, 2vw, 16px);
+    text-align: center;
+}
+
+#drop-zone:hover {
+    background-color: var(--hover-search-color);
+    cursor: pointer;
+}
+
+#upload {
+    display: none;
+}

@@ -1,14 +1,10 @@
-import { useState } from 'react'
+import Dropzone from "./components/Dropzone";
 
 function App() {
-
   return (
     <>
-      <div className="card">
-        <button>
-          Upload File
-        </button>
-      </div>
+      <h1>docsearcher</h1>
+      <Dropzone />
     </>
   )
 }
