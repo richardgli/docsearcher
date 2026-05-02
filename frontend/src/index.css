@@ -19,14 +19,49 @@ body {
     font-family: var(--font-family);
 }
 
+#login-button {
+    background: var(--login-gradient);
+    position: fixed;
+    top: 2vh;
+    right: 5%;
+    width: 8rem;
+    height: 5vh;
+    border: 3px solid;
+    border-radius: 25px;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.background {
+    display: flex;
+    align-items: center;
+}
+
+.background > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.background > div > p {
+    align-self: center;
+    text-align: center;
+}
+
+.background > div:first-child {
+    flex: 1;
+    align-items: center;
+}
+
 #drop-zone {
     background-color: var(--search-color);
     display: flex;
     flex-direction: column;
-    width: 40%;
+    width: 40vw;
     height: 80vh;
-    margin: 5vh 5% 0 auto;
-    border: 3px solid ;
+    margin: 10vh 5% 0 auto;
+    border: 3px solid;
     border-radius: 5%;
     justify-content: center;
     align-items: center;
@@ -38,7 +73,7 @@ body {
 }
 
 #drop-zone p {
-    max-width: 20vw;
+    max-width: 18vw;
     font-size: clamp(8px, 2vw, 16px);
     text-align: center;
 }
@@ -50,4 +85,29 @@ body {
 
 #upload {
     display: none;
+}
+
+#search-bar {
+    background: var(--search-gradient);
+    display: flex;
+    width: 40vw;
+    height: 5vh;
+    border: 3px solid;
+    border-radius: 25px;
+    align-self: center;
+    align-items: center;
+}
+
+#title {
+    font-size: clamp(8px, 5vw, 320px);
+}
+
+#subtitle {
+    max-width: 40vw;
+    margin: 2vh 0 2vh 0;
+}
+
+#description {
+    max-width: 40vw;
+    margin: 2vh 0 0 0;
 }
