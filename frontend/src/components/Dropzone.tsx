@@ -11,7 +11,7 @@ export default function Dropzone() {
     return (
         <>
             <div id="drop-zone" onClick={handleClick}>
-                <Upload size={65} stroke-width={1} />
+                <Upload size={65} strokeWidth={1} />
                 <p>Upload file from computer or drag and drop file</p>
             </div>
             <input id="upload" type="file" accept=".pdf" ref={inputRef}/>

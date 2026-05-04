@@ -4,8 +4,12 @@ export default function Searchbar() {
     return (
         <>
             <div id="search-bar">
-                <Search />
-                <p>Search</p>
+                <Search size={24} strokeWidth={1.5} />
+                <input
+                    type="text"
+                    placeholder="Search"
+                    autoComplete="off"
+                />
             </div>
         </>
     )
