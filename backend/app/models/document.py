@@ -13,7 +13,11 @@ class Document(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         primary_key=True, default=uuid.uuid4
     )
-    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     storage_path: Mapped[str] = mapped_column(Text, nullable=False)
     checksum_sha256: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -27,6 +31,9 @@ class Document(Base):
         default=lambda: datetime.now(timezone.utc),
     )
 
+    user: Mapped["User"] = relationship( # noqa: f821
+        "User", back_populates="documents"
+    )
     chunks: Mapped[list["Chunk"]] = relationship(  # noqa: F821
         "Chunk", back_populates="document", cascade="all, delete-orphan"
     )

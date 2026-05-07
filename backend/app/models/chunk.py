@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
-    BigInteger, ForeignKey, Index, Integer, Text, DateTime,
+    ForeignKey, Index, Integer, Text, DateTime, 
     UniqueConstraint, String,
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -25,7 +25,11 @@ class Chunk(Base):
         nullable=False,
         index=True,
     )
-    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     page: Mapped[int] = mapped_column(Integer, nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
@@ -35,7 +39,7 @@ class Chunk(Base):
         Vector(EMBEDDING_DIM), nullable=True
     )
 
-    # Full-text search tsvector — populated by DB trigger (see schema.sql)
+    # full-text search tsvector — populated by DB trigger (see schema.sql)
     tsv: Mapped[object] = mapped_column(TSVECTOR, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
