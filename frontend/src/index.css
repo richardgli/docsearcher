@@ -218,11 +218,11 @@ body {
 }
 
 .history-list li button {
+    position: relative;
     width: 100%;
     padding: 0.75rem 1.5rem;
     background: none;
     border: none;
-    border-left: 4px solid transparent;
     text-align: left;
     cursor: pointer;
     font-family: var(--font-family);
@@ -232,7 +232,15 @@ body {
 
 .history-list li button:hover {
     background: rgba(200, 200, 200, 0.3);
-    /* use same gradient as search bar */
-    border-left-color: #94b9ff;
     padding-left: 2rem;
+}
+
+.history-list li button:hover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--search-gradient);
 }
