@@ -2,35 +2,75 @@
 
 :root {
     --font-family: 'Comfortaa', sans-serif;
-
+    
     --search-gradient: linear-gradient(45deg, #cdffd8, #94b9ff);
     --login-gradient: linear-gradient(45deg, #fff7ad, #ffa9f9);
-
-    --search-color: #d9d9d9;
-    --hover-search-color: #c9c9c9;
 }
 
 * {
     margin: 0;
     padding: 0;
 }
+    
+html {
+    overflow: hidden;
+    height: 100%;
+}
 
 body {
     font-family: var(--font-family);
+    overflow: hidden;
+    height: 100%;
+}
+
+#login-button {
+    background: var(--login-gradient);
+    background-size: 200%;
+    position: fixed;
+    top: 2vh;
+    right: 5%;
+    width: 8rem;
+    height: 5vh;
+    border: 3px solid;
+    border-radius: 25px;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.background {
+    display: flex;
+    align-items: center;
+}
+
+.background > div {
+    display: flex;
+    flex-direction: column;
+}
+
+.background > div > p {
+    align-self: center;
+    text-align: center;
+}
+
+.background > div:first-child {
+    flex: 1;
+    align-items: center;
 }
 
 #drop-zone {
     background-color: var(--search-color);
     display: flex;
     flex-direction: column;
-    width: 40%;
+    width: 40vw;
     height: 80vh;
-    margin: 5vh 5% 0 auto;
-    border: 3px solid ;
+    margin: 10vh 5% 0 auto;
+    border: 3px solid;
     border-radius: 5%;
     justify-content: center;
     align-items: center;
-    transition: transform .25s ease-in-out;
+    user-select: none;    
 }
 
 #drop-zone * {
@@ -38,16 +78,169 @@ body {
 }
 
 #drop-zone p {
-    max-width: 20vw;
+    max-width: 18vw;
     font-size: clamp(8px, 2vw, 16px);
     text-align: center;
 }
 
 #drop-zone:hover {
-    background-color: var(--hover-search-color);
     cursor: pointer;
 }
 
 #upload {
     display: none;
+}
+
+#search-bar {
+    background: var(--search-gradient);
+    background-size: 200%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 40vw;
+    height: 5vh;
+    border: 3px solid;
+    border-radius: 25px;
+    align-self: center;
+    padding: 0 1rem;
+    cursor: text;
+    user-select: none;
+}
+
+#search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    flex: 1;
+    font-family: var(--font-family);
+    font-size: 1rem;
+}
+
+#search-bar input:focus::placeholder {
+    color: transparent;
+}
+
+#title {
+    font-size: clamp(8px, 5vw, 320px);
+}
+
+#subtitle {
+    max-width: 40vw;
+    margin: 2vh 0 2vh 0;
+}
+
+#description {
+    max-width: 40vw;
+    margin: 2vh 0 0 0;
+}
+
+#menu-button {
+    position: fixed;
+    top: 2vh;
+    left: 0;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+    border-right: 2px solid black;
+    border-left: none;
+    border-radius: 0 12px 12px 0;
+    background: white;
+    width: 3rem;
+    height: 3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 15;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 14;
+}
+
+#sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    border: none;
+    border-right: 2px solid black;
+    border-radius: 0 12px 12px 0;
+    background: white;
+    z-index: 14;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem;
+    border-bottom: 2px solid;
+}
+
+.sidebar-header h2 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+    scrollbar-width: none;
+}
+
+.sidebar-content::-webkit-scrollbar {
+    display: none;
+}
+
+.sidebar-content:hover::-webkit-scrollbar {
+    display: block;
+}
+
+.sidebar-content:hover {
+    scrollbar-width: thin;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.history-list li {
+    margin: 0;
+}
+
+.history-list li button {
+    position: relative;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.history-list li button:hover {
+    background: rgba(200, 200, 200, 0.3);
+    padding-left: 2rem;
+}
+
+.history-list li button:hover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--search-gradient);
 }

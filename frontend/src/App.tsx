@@ -1,12 +1,19 @@
-import Dropzone from "./components/Dropzone";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Search from "./pages/Search";
 
-function App() {
+const queryClient = new QueryClient();
+
+const App = () => {
   return (
-    <>
-      <h1>docsearcher</h1>
-      <Dropzone />
-    </>
-  )
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Search />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
 }
 
 export default App
