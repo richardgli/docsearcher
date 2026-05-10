@@ -2,18 +2,20 @@ import { useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { gsap } from "gsap";
 import { Upload, Plus, Minus } from "lucide-react";
-import worker from "pdfjs-dist/build/pdf.worker?url";
+// import worker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+
+// pdfjs.GlobalWorkerOptions.workerSrc = worker;
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
  
 export default function Dropzone() {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const [PDF, setPDF] = useState<File | null>(null);
     const [numPages, setNumPages] = useState(0);
-    const [pageScale, setPageScale] = useState(1);
+    const [pageScale, setPageScale] = useState(0.75);
 
-    pdfjs.GlobalWorkerOptions.workerSrc = worker;
     
     const handleClick = () => {
         if (PDF) return;
