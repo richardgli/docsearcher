@@ -1,12 +1,22 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
 import { gsap } from "gsap";
-import { Upload } from "lucide-react";
-
+import { Upload, Plus, Minus } from "lucide-react";
+import worker from "pdfjs-dist/build/pdf.worker?url";
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+ 
 export default function Dropzone() {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
+    const [PDF, setPDF] = useState<File | null>(null);
+    const [numPages, setNumPages] = useState(0);
+    const [pageScale, setPageScale] = useState(1);
 
+    pdfjs.GlobalWorkerOptions.workerSrc = worker;
+    
     const handleClick = () => {
+        if (PDF) return;
         inputRef.current?.click();
     };
 
@@ -30,6 +40,11 @@ export default function Dropzone() {
         });
     };
 
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) setPDF(file);
+    };
+
     return (
         <>
             <div id="drop-zone" 
@@ -37,11 +52,34 @@ export default function Dropzone() {
                  onClick={handleClick}
                  onMouseEnter={handleMouseEnter}
                  onMouseLeave={handleMouseLeave}
+                 className={PDF ? "has-pdf" : ""}
             >
-                <Upload size={65} strokeWidth={1} />
-                <p>Upload file from computer or drag and drop file</p>
+                <div id="pdf-controls" className={PDF ? "has-pdf" : ""}>
+                    <button onClick={(e) =>  {
+                        e.stopPropagation(); 
+                        setPageScale(s => s - 0.25)
+                    }}>
+                        <Minus />
+                    </button>
+                    <span>{Math.round(pageScale * 100)}%</span>
+                    <button onClick={(e) => {
+                        e.stopPropagation();
+                        setPageScale(s => s + 0.25)
+                    }}>
+                        <Plus />
+                    </button>
+                </div>
+                <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
+                <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>
+                <Document file={PDF} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
+                    {Array.from({ length: numPages }, (_, i) => (
+                        <div key={i} className="pdf-page-wrapper">
+                            <Page pageNumber={i + 1} scale={pageScale}/>
+                        </div>
+                    ))}
+                </Document>
             </div>
-            <input id="upload" type="file" accept=".pdf" ref={inputRef}/>
+            <input id="upload" type="file" accept=".pdf" ref={inputRef} onChange={handleFileUpload}/>
         </>
     )
 }

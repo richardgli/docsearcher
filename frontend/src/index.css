@@ -5,6 +5,8 @@
     
     --search-gradient: linear-gradient(45deg, #cdffd8, #94b9ff);
     --login-gradient: linear-gradient(45deg, #fff7ad, #ffa9f9);
+
+    --search-colour: #d5d5d5;
 }
 
 * {
@@ -60,7 +62,8 @@ body {
 }
 
 #drop-zone {
-    background-color: var(--search-color);
+    background-color: var(--search-colour);
+    overflow: auto;
     display: flex;
     flex-direction: column;
     width: 40vw;
@@ -71,9 +74,28 @@ body {
     justify-content: center;
     align-items: center;
     user-select: none;    
+    /* scrollbar-width: none; */
 }
 
-#drop-zone * {
+#drop-zone.has-pdf {
+    justify-content: flex-start;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    align-items: unset;
+}
+
+.react-pdf__Document {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: max-content;
+}
+
+#drop-zone > p,
+#drop-zone > span,
+#drop-zone > svg {
     margin: 2vh 0;
 }
 
@@ -85,6 +107,36 @@ body {
 
 #drop-zone:hover {
     cursor: pointer;
+}
+
+.pdf-page-wrapper {
+    user-select: text;
+    cursor: default;
+}
+
+.has-pdf {
+    display: none;
+}
+
+#pdf-controls {
+    display: none;
+}
+
+#pdf-controls.has-pdf {
+    /*  */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: sticky;
+    z-index: 10;
+}
+
+.react-pdf__Document {
+    min-width: max-content;
+    min-height: max-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 #upload {
@@ -241,6 +293,6 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 5px;
+    width: 10px;
     background: var(--search-gradient);
 }
