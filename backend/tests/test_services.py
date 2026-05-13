@@ -24,6 +24,7 @@ import app.models.chunk    # noqa: F401
 import app.models.user     # noqa: F401
 from app.models.document import Document
 from app.models.user import User
+from app.models.chunk import Chunk
 from app.services.indexing import IndexingService, extract_chunks, CHUNK_TOKENS
 from app.services.search import SearchService
 
@@ -40,15 +41,16 @@ def engine():
 
 @pytest.fixture
 def db(engine):
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     session = Session()
     yield session
-    session.rollback()
     session.close()
 
 @pytest.fixture
 def sample_user_and_doc(db):
-    user = User(email="test@example.com")
+    user = User(email=f"test-{uuid.uuid4()}@example.com")
     db.add(user)
     db.flush()  # get user.id but without committing
 
