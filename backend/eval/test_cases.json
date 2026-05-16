@@ -1,0 +1,23 @@
+{
+    "documents": [
+      {
+        "filename": "placeholder1.pdf",
+        "description": "Research paper"
+      },
+      {
+        "filename": "placeholder2.pdf", 
+        "description": "Policy document"
+      },
+      {
+        "filename": "placeholder3.pdf",
+        "description": "Financial report"
+      }
+    ],
+    "queries": [
+      {
+        "query": "REPLACE WITH QUERY. PLACEHOLDER FOR NOW",
+        "document": "placeholder1.pdf",
+        "relevant_pages": [1]
+      }
+    ]
+  }
