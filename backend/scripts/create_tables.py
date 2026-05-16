@@ -15,6 +15,7 @@ from app.db.base import Base
 from app.db.session import engine
 import app.models.document  # noqa: F401
 import app.models.chunk     # noqa: F401
+import app.models.user      # noqa: F401
 
 
 def main() -> None:
