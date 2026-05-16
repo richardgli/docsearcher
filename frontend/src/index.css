@@ -70,11 +70,11 @@ body {
     height: 80vh;
     margin: 10vh 5% 0 auto;
     border: 3px solid;
-    border-radius: 5%;
+    /* border-radius: 5%; */
     justify-content: center;
     align-items: center;
     user-select: none;    
-    /* scrollbar-width: none; */
+    box-sizing: border-box;
 }
 
 #drop-zone.has-pdf {
@@ -82,7 +82,8 @@ body {
     display: flex;
     flex-direction: column;
     overflow: auto;
-    align-items: unset;
+    align-items: center;
+    padding-top: 4.5rem;
 }
 
 .react-pdf__Document {
@@ -112,6 +113,16 @@ body {
 .pdf-page-wrapper {
     user-select: text;
     cursor: default;
+    margin-bottom: 1rem;
+}
+
+.pdf-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0 0 2rem;
 }
 
 .has-pdf {
@@ -120,15 +131,53 @@ body {
 
 #pdf-controls {
     display: none;
+    cursor: default;
 }
 
 #pdf-controls.has-pdf {
-    /*  */
     display: flex;
+    gap: 0.75rem;
     justify-content: center;
     align-items: center;
-    position: sticky;
+    position: fixed;
+    top: 10vh;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 10;
+}
+
+#pdf-controls label {
+    font-size: clamp(8px, 1.5vw, 14px);
+}
+
+#pdf-controls input {
+    width: 4rem;
+    padding: 0.35rem 0.5rem;
+    border: 2px solid;
+    border-radius: 12px;
+    background: white;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    text-align: center;
+}
+
+#pdf-controls button {
+    padding: 0.35rem 0.75rem;
+    border: 2px solid;
+    border-radius: 12px;
+    background: white;
+    font-family: var(--font-family);
+    cursor: pointer;
+}
+
+#page-jump-input::-webkit-outer-spin-button,
+#page-jump-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#page-jump-input {
+    -moz-appearance: textfield; /* Firefox */
 }
 
 .react-pdf__Document {
@@ -265,6 +314,10 @@ body {
     margin: 0;
 }
 
+#pointer { 
+    cursor: pointer;
+}
+
 .history-list li {
     margin: 0;
 }
@@ -295,4 +348,11 @@ body {
     bottom: 0;
     width: 10px;
     background: var(--search-gradient);
+}
+
+.sidebar-content p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
 }
