@@ -5,6 +5,8 @@
     
     --search-gradient: linear-gradient(45deg, #cdffd8, #94b9ff);
     --login-gradient: linear-gradient(45deg, #fff7ad, #ffa9f9);
+
+    --search-colour: #d5d5d5;
 }
 
 * {
@@ -41,7 +43,7 @@ body {
 
 .background {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .background > div {
@@ -59,21 +61,53 @@ body {
     align-items: center;
 }
 
+.main-title {
+    align-self: flex-start;
+    margin: 30vh 0 0 2vw;
+}
+
+.dropzone-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10vh 5% 0 auto;
+}
+
 #drop-zone {
-    background-color: var(--search-color);
+    background-color: var(--search-colour);
+    overflow: auto;
     display: flex;
     flex-direction: column;
     width: 40vw;
     height: 80vh;
-    margin: 10vh 5% 0 auto;
     border: 3px solid;
-    border-radius: 5%;
+    /* border-radius: 5%; */
     justify-content: center;
     align-items: center;
     user-select: none;    
+    box-sizing: border-box;
 }
 
-#drop-zone * {
+#drop-zone.has-pdf {
+    justify-content: flex-start;
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+    align-items: center;
+    padding-top: 4.5rem;
+}
+
+.react-pdf__Document {
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: max-content;
+}
+
+#drop-zone > p,
+#drop-zone > span,
+#drop-zone > svg {
     margin: 2vh 0;
 }
 
@@ -83,8 +117,97 @@ body {
     text-align: center;
 }
 
-#drop-zone:hover {
+#drop-zone.no-pdf:hover {
     cursor: pointer;
+}
+
+.pdf-page-wrapper {
+    user-select: text;
+    cursor: default;
+    margin-bottom: 1rem;
+}
+
+.pdf-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0 0 2rem;
+}
+
+.has-pdf {
+    display: none;
+}
+
+#pdf-controls {
+    display: none;
+    cursor: default;
+}
+
+#pdf-controls.has-pdf {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 10vh;
+    left: auto;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+#pdf-controls label {
+    font-size: clamp(8px, 1.5vw, 14px);
+}
+
+#pdf-controls input {
+    width: 4rem;
+    padding: 0.35rem 0.5rem;
+    border: 2px solid;
+    border-radius: 12px;
+    background: white;
+    font-family: var(--font-family);
+    font-size: 1rem;
+    text-align: center;
+}
+
+#pdf-controls button {
+    padding: 0.35rem 0.75rem;
+    border: 2px solid;
+    border-radius: 12px;
+    background: white;
+    font-family: var(--font-family);
+    cursor: pointer;
+}
+
+#resubmit-button {
+    display: block;
+    margin: 1rem auto 0 auto;
+    padding: 0.5rem 1rem;
+    border: 2px solid;
+    border-radius: 5%;
+    background: none;
+    font-family: var(--font-family);
+    cursor: pointer;
+}
+
+#page-jump-input::-webkit-outer-spin-button,
+#page-jump-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#page-jump-input {
+    -moz-appearance: textfield; /* Firefox */
+}
+
+.react-pdf__Document {
+    min-width: max-content;
+    min-height: max-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 #upload {
@@ -126,12 +249,15 @@ body {
 
 #subtitle {
     max-width: 40vw;
-    margin: 2vh 0 2vh 0;
+    margin: 1vh 0 2vh 0;
+    font-style: italic;
+    font-size: clamp(8px, 1vw, 320px);
 }
 
 #description {
     max-width: 40vw;
     margin: 2vh 0 0 0;
+    font-size: clamp(6px, 0.75vw, 320px);;
 }
 
 #menu-button {
@@ -213,6 +339,10 @@ body {
     margin: 0;
 }
 
+#pointer { 
+    cursor: pointer;
+}
+
 .history-list li {
     margin: 0;
 }
@@ -241,6 +371,13 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 5px;
+    width: 10px;
     background: var(--search-gradient);
+}
+
+.sidebar-content p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
 }

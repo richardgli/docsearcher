@@ -7,6 +7,7 @@ export default function Historybar() {
     const sidebarContentRef = useRef<HTMLDivElement>(null);
     const [isOpen, setIsOpen] = useState(false);
     const sidebarWidth = 250;
+    const popoutDistance = 30;
 
     useEffect(() => {
         if (!sidebarContentRef.current) return;
@@ -14,7 +15,7 @@ export default function Historybar() {
     }, []);
     
     const handleMenuClick = () => {
-        if (!menuButtonRef.current || !sidebarContentRef.current) return;
+        if (!menuButtonRef.current) return;
         if (isOpen) {
             gsap.to(menuButtonRef.current, {
                 x: 0,
@@ -50,6 +51,7 @@ export default function Historybar() {
             duration: 0.25,
             ease: "power2.out",
         });
+        
         gsap.to(menuButtonRef.current, {
             x: 0,
             duration: 0.25,
@@ -75,23 +77,23 @@ export default function Historybar() {
     };
     
     const handleMouseEnter = () => {
-        if (!menuButtonRef.current || !sidebarContentRef.current || isOpen) return;
+        if (!menuButtonRef.current || isOpen) return;
         
         gsap.to(menuButtonRef.current, {
-            x: isOpen ? sidebarWidth + 7 : 7,
+            x: isOpen ? sidebarWidth + popoutDistance : popoutDistance,
             duration: 0.25,
             ease: "power2.out",
         })
 
         gsap.to(sidebarContentRef.current, {
-            x: isOpen ? 7 : -sidebarWidth + 7,
+            x: isOpen ? popoutDistance : -sidebarWidth + popoutDistance,
             duration: 0.25,
             ease: "power2.out",
         });        
     };
     
     const handleMouseLeave = () => {
-        if (!menuButtonRef.current || !sidebarContentRef.current || isOpen) return;
+        if (!menuButtonRef.current || isOpen) return;
         
         gsap.to(menuButtonRef.current, {
             x: isOpen ? sidebarWidth : 0,
@@ -117,15 +119,19 @@ export default function Historybar() {
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onClick={handleMenuClick}
-            >
+                >
                 <Menu size={24} strokeWidth={1.5} />
             </button>
             <div 
                 id="sidebar" 
                 ref={sidebarContentRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onClick={isOpen ? undefined : handleMenuClick}
             >
-                <div className="sidebar-content">
-                    <ul className="history-list">
+                <div className="sidebar-content" id={isOpen ? "" : "pointer"}>
+                    <p>Recent docs</p>
+                    {isOpen && (<ul className="history-list">
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 1")}>
                                 Recent search 1
@@ -216,7 +222,7 @@ export default function Historybar() {
                                 Recent search 3
                             </button>
                         </li>
-                    </ul>
+                    </ul>)}
                 </div>
             </div>
         </>

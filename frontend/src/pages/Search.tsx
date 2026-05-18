@@ -51,14 +51,14 @@ function Search() {
                 Login
             </button>
             <div className="background">
-                <div>
+                <div className="main-title">
                     <p id="title">docsearcher</p>
                     <p id="subtitle">
-                        a goated ai tool for finding specific information in PDFs WITHOUT keywords
+                        Search PDFs by description, not keywords
                     </p>
                     <Searchbar />
                     <p id="description">
-                        Describe what this website is and explain why its a better alternative to regular searching using ctrl + f as;dlkf jas;lf jawra; igheoaiugh o;asfkh ao;irguh ogiu ha;s oigha;sofgia;sofgi has;ofgi ha;oguh ear;ogi ha;goisadh o;osif gha;ogi hraw;og ihro;aihas;oflkjas f;oewoi;rigiroirwofgh aw or fiho idoshfasd fhasd;k
+                        PDFs are dense. You shouldn't need to know the exact words in a document to find what you're looking for. docsearcher lets you describe the information you need in plain English and finds the 5 most relevant passages for you so you can stop searching and start reading.
                     </p>
                 </div>
                 <Dropzone />
