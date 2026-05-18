@@ -103,21 +103,23 @@ export default function Dropzone() {
     };
 
     const handleMouseEnter = () => {
-        if (!dropZoneRef.current) return;
+        if (!dropZoneRef.current || dropZoneRef.current?.classList.contains('has-pdf')) return;
 
         gsap.to(dropZoneRef.current, {
             backgroundColor: "#dfdfdf",
-            duration: 0.1,
+            boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
+            duration: 0.4,
             ease: "power2.out",
         });
     };
     
     const handleMouseLeave = () => {
-        if (!dropZoneRef.current) return;
+        if (!dropZoneRef.current || dropZoneRef.current?.classList.contains('has-pdf')) return;
         
         gsap.to(dropZoneRef.current, {
             backgroundColor: "#d5d5d5",
-            duration: 0.1,
+            boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0), 0 6px 20px 0 rgba(0, 0, 0, 0)",
+            duration: 0.4,
             ease: "power2.out",
         });
     };
@@ -132,96 +134,115 @@ export default function Dropzone() {
         }
     };
 
+    const handleResubmit = () => {
+        setPDF(null);
+        setNumPages(0);
+        setCurrentPage(1);
+        setPageInput("1");
+        setPageScale(0.75);
+        if (inputRef.current) {
+            inputRef.current.value = "";
+        }
+    };
+
     return (
         <>
-            <div id="drop-zone" 
-                 ref={dropZoneRef}
-                 onClick={handleClick}
-                 onMouseEnter={handleMouseEnter}
-                 onMouseLeave={handleMouseLeave}
-                 className={PDF ? "has-pdf" : ""}
-            >
-                <div
-                    id="pdf-controls"
-                    className={PDF ? "has-pdf" : ""}
+            <div className="dropzone-container">
+
+                <div id="drop-zone" 
+                    ref={dropZoneRef}
+                    onClick={handleClick}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    className={PDF ? "has-pdf" : "no-pdf"}
                 >
-                    <label htmlFor="page-jump-input">Page</label>
-                    <input
-                        id="page-jump-input"
-                        type="number"
-                        min={1}
-                        max={numPages || undefined}
-                        value={pageInput}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => {
-                            setPageInput(e.target.value);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                    <div
+                        id="pdf-controls"
+                        className={PDF ? "has-pdf" : ""}
+                    >
+                        <label htmlFor="page-jump-input">Page</label>
+                        <input
+                            id="page-jump-input"
+                            type="number"
+                            min={1}
+                            max={numPages || undefined}
+                            value={pageInput}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                                setPageInput(e.target.value);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    const value = Number.parseInt(pageInput, 10);
+                                    if (value > numPages || value < 1) {
+                                        setPageInput(String(currentPage));
+                                        return;   
+                                    }
+                                    jumpToPage(value);
+                                }
+                            }}
+                            onBlur={() => {
                                 const value = Number.parseInt(pageInput, 10);
                                 if (value > numPages || value < 1) {
                                     setPageInput(String(currentPage));
-                                    return;   
+                                    return;
                                 }
                                 jumpToPage(value);
-                            }
-                        }}
-                        onBlur={() => {
-                            const value = Number.parseInt(pageInput, 10);
-                            if (value > numPages || value < 1) {
-                                setPageInput(String(currentPage));
-                                return;
-                            }
-                            jumpToPage(value);
-                        }}
-                    />
-                    <span>/ {numPages}</span>
+                            }}
+                        />
+                        <span>/ {numPages}</span>
 
-                    <button type="button" onClick={(e) =>  {
-                        e.stopPropagation(); 
-                        const index = pageScales.indexOf(pageScale);
-                        if (index > 0) {
-                            setPageScale(pageScales[index - 1]);
-                        } 
-                    }}>
-                        <Minus />
-                    </button>
-                    <span>{Math.round(pageScale * 100)}%</span>
-                    <button type="button" onClick={(e) => {
-                        e.stopPropagation();
-                        const index = pageScales.indexOf(pageScale);
-                        if (index < pageScales.length - 1) {
-                            setPageScale(pageScales[index + 1]);
-                        }
-                    }}>
-                        <Plus />
-                    </button>
+                        <button type="button" onClick={(e) =>  {
+                            e.stopPropagation(); 
+                            const index = pageScales.indexOf(pageScale);
+                            if (index > 0) {
+                                setPageScale(pageScales[index - 1]);
+                            } 
+                        }}>
+                            <Minus />
+                        </button>
+                        <span>{Math.round(pageScale * 100)}%</span>
+                        <button type="button" onClick={(e) => {
+                            e.stopPropagation();
+                            const index = pageScales.indexOf(pageScale);
+                            if (index < pageScales.length - 1) {
+                                setPageScale(pageScales[index + 1]);
+                            }
+                        }}>
+                            <Plus />
+                        </button>
+                    </div>
+                    <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
+                    <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>
+                    {PDF && (
+                        <Document file={PDF} onLoadSuccess={({ numPages }) => {
+                            setNumPages(numPages);
+                            setCurrentPage(1);
+                            setPageInput("1");
+                        }}>
+                            <div className="pdf-pages">
+                                {Array.from({ length: numPages }, (_, index) => (
+                                    <div
+                                        key={`pdf-page-${index + 1}`}
+                                        className="pdf-page-wrapper"
+                                        ref={(element) => {
+                                            pageRefs.current[index] = element;
+                                        }}
+                                    >
+                                        <Page pageNumber={index + 1} scale={pageScale} />
+                                    </div>
+                                ))}
+                            </div>
+                        </Document>
+                    )}
                 </div>
-                <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
-                <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>
                 {PDF && (
-                    <Document file={PDF} onLoadSuccess={({ numPages }) => {
-                        setNumPages(numPages);
-                        setCurrentPage(1);
-                        setPageInput("1");
-                    }}>
-                        <div className="pdf-pages">
-                            {Array.from({ length: numPages }, (_, index) => (
-                                <div
-                                    key={`pdf-page-${index + 1}`}
-                                    className="pdf-page-wrapper"
-                                    ref={(element) => {
-                                        pageRefs.current[index] = element;
-                                    }}
-                                >
-                                    <Page pageNumber={index + 1} scale={pageScale} />
-                                </div>
-                            ))}
-                        </div>
-                    </Document>
+                    <button id="resubmit-button" type="button" onClick={handleResubmit}>
+                        Upload New PDF
+                    </button>
                 )}
+                <input id="upload" type="file" accept=".pdf" ref={inputRef} onChange={handleFileUpload}/>
             </div>
-            <input id="upload" type="file" accept=".pdf" ref={inputRef} onChange={handleFileUpload}/>
         </>
     )
 }

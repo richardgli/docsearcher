@@ -43,7 +43,7 @@ body {
 
 .background {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .background > div {
@@ -61,6 +61,18 @@ body {
     align-items: center;
 }
 
+.main-title {
+    align-self: flex-start;
+    margin: 30vh 0 0 2vw;
+}
+
+.dropzone-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10vh 5% 0 auto;
+}
+
 #drop-zone {
     background-color: var(--search-colour);
     overflow: auto;
@@ -68,7 +80,6 @@ body {
     flex-direction: column;
     width: 40vw;
     height: 80vh;
-    margin: 10vh 5% 0 auto;
     border: 3px solid;
     /* border-radius: 5%; */
     justify-content: center;
@@ -106,7 +117,7 @@ body {
     text-align: center;
 }
 
-#drop-zone:hover {
+#drop-zone.no-pdf:hover {
     cursor: pointer;
 }
 
@@ -141,7 +152,7 @@ body {
     align-items: center;
     position: fixed;
     top: 10vh;
-    left: 50%;
+    left: auto;
     transform: translateX(-50%);
     z-index: 10;
 }
@@ -166,6 +177,17 @@ body {
     border: 2px solid;
     border-radius: 12px;
     background: white;
+    font-family: var(--font-family);
+    cursor: pointer;
+}
+
+#resubmit-button {
+    display: block;
+    margin: 1rem auto 0 auto;
+    padding: 0.5rem 1rem;
+    border: 2px solid;
+    border-radius: 5%;
+    background: none;
     font-family: var(--font-family);
     cursor: pointer;
 }
@@ -227,12 +249,15 @@ body {
 
 #subtitle {
     max-width: 40vw;
-    margin: 2vh 0 2vh 0;
+    margin: 1vh 0 2vh 0;
+    font-style: italic;
+    font-size: clamp(8px, 1vw, 320px);
 }
 
 #description {
     max-width: 40vw;
     margin: 2vh 0 0 0;
+    font-size: clamp(6px, 0.75vw, 320px);;
 }
 
 #menu-button {
