@@ -25,7 +25,7 @@ body {
     height: 100%;
 }
 
-#login-button {
+#login-button, #logout-button {
     background: var(--login-gradient);
     background-size: 200%;
     position: fixed;
