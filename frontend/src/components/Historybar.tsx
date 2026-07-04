@@ -134,92 +134,92 @@ export default function Historybar() {
                     {isOpen && (<ul className="history-list">
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 1")}>
-                                Recent search 1
+                                Document 1
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 2")}>
-                                Recent search 2
+                                Document 2
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 3
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 4
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 5
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 6
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 7
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 8
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 9
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 10
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 11
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 12
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 13
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 14
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 15
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 16
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 17
                             </button>
                         </li>
                         <li>
                             <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Recent search 3
+                                Document 18
                             </button>
                         </li>
                     </ul>)}

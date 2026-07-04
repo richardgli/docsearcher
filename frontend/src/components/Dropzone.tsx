@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { gsap } from "gsap";
-import { Upload, Plus, Minus } from "lucide-react";
+import { Upload, Plus, Minus, ChevronLeft, ChevronRight } from "lucide-react";
 // import worker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -9,7 +9,11 @@ import 'react-pdf/dist/Page/TextLayer.css';
 // pdfjs.GlobalWorkerOptions.workerSrc = worker;
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
  
-export default function Dropzone() {
+type DropzoneProps = {
+    theme: "light" | "dark";
+};
+
+export default function Dropzone({ theme }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -19,9 +23,22 @@ export default function Dropzone() {
     const [pageInput, setPageInput] = useState("1");
     const [pageScale, setPageScale] = useState(0.75);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
+    const dropzoneBaseColor = theme === "dark" ? "#1b1f27" : "#d5d5d5";
+    const dropzoneHoverColor = theme === "dark" ? "#262b37" : "#dfdfdf";
 
     useEffect(() => {
-        if (!PDF || !dropZoneRef.current || !numPages) return;
+        if (!dropZoneRef.current) return;
+
+        gsap.set(dropZoneRef.current, {
+            backgroundColor: dropzoneBaseColor,
+            boxShadow: PDF
+                ? "0 4px 8px 0 rgba(0, 0, 0, 0), 0 6px 20px 0 rgba(0, 0, 0, 0)"
+                : "0 4px 8px 0 rgba(0, 0, 0, 0), 0 6px 20px 0 rgba(0, 0, 0, 0)",
+        });
+    }, [PDF, dropzoneBaseColor]);
+
+    useEffect(() => {
+        if (!PDF || !dropZoneRef.current || !numPages) return;``
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -58,30 +75,6 @@ export default function Dropzone() {
         setPageInput(String(currentPage));
     }, [currentPage]);
 
-    useEffect(() => {
-        if (!PDF || !dropZoneRef.current) return;
-
-        const updatePosition = () => {
-            if (!dropZoneRef.current) return;
-            const rect = dropZoneRef.current.getBoundingClientRect();
-            const controls = document.getElementById('pdf-controls');
-            if (!controls) return;
-            controls.style.left = `${rect.left + rect.width / 2}px`;
-            controls.style.transform = 'translateX(-50%)';
-        };
-
-        updatePosition();
-
-        const observer = new ResizeObserver(updatePosition);
-        observer.observe(dropZoneRef.current);
-        window.addEventListener('resize', updatePosition);
-
-        return () => {
-            observer.disconnect();
-            window.removeEventListener('resize', updatePosition);
-        };
-    }, [PDF]);
-    
     const jumpToPage = (pageNumber: number) => {
         if (!numPages) return;
 
@@ -96,6 +89,30 @@ export default function Dropzone() {
             block: "start",
         });
     };
+
+    const goToPreviousPage = () => {
+        jumpToPage(currentPage - 1);
+    };
+
+    const goToNextPage = () => {
+        jumpToPage(currentPage + 1);
+    };
+
+    const zoomOut = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const index = pageScales.indexOf(pageScale);
+        if (index > 0) {
+            setPageScale(pageScales[index - 1]);
+        }
+    };
+
+    const zoomIn = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const index = pageScales.indexOf(pageScale);
+        if (index < pageScales.length - 1) {
+            setPageScale(pageScales[index + 1]);
+        }
+    };
     
     const handleClick = () => {
         if (PDF) return;
@@ -106,7 +123,7 @@ export default function Dropzone() {
         if (!dropZoneRef.current || dropZoneRef.current?.classList.contains('has-pdf')) return;
 
         gsap.to(dropZoneRef.current, {
-            backgroundColor: "#dfdfdf",
+            backgroundColor: dropzoneHoverColor,
             boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19)",
             duration: 0.4,
             ease: "power2.out",
@@ -117,7 +134,7 @@ export default function Dropzone() {
         if (!dropZoneRef.current || dropZoneRef.current?.classList.contains('has-pdf')) return;
         
         gsap.to(dropZoneRef.current, {
-            backgroundColor: "#d5d5d5",
+            backgroundColor: dropzoneBaseColor,
             boxShadow: "0 4px 8px 0 rgba(0, 0, 0, 0), 0 6px 20px 0 rgba(0, 0, 0, 0)",
             duration: 0.4,
             ease: "power2.out",
@@ -147,7 +164,7 @@ export default function Dropzone() {
 
     return (
         <>
-            <div className="dropzone-container">
+            <div className="drop-zone-container">
 
                 <div id="drop-zone" 
                     ref={dropZoneRef}
@@ -160,7 +177,19 @@ export default function Dropzone() {
                         id="pdf-controls"
                         className={PDF ? "has-pdf" : ""}
                     >
-                        <label htmlFor="page-jump-input">Page</label>
+                        <div className="pdf-controls-group">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goToPreviousPage();
+                                }}
+                                disabled={currentPage <= 1}
+                                aria-label="Previous page"
+                            >
+                                <ChevronLeft />
+                            </button>
+                            <label htmlFor="page-jump-input">Page</label>
                         <input
                             id="page-jump-input"
                             type="number"
@@ -190,27 +219,29 @@ export default function Dropzone() {
                                 jumpToPage(value);
                             }}
                         />
-                        <span>/ {numPages}</span>
+                            <span>/ {numPages}</span>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    goToNextPage();
+                                }}
+                                disabled={currentPage >= numPages}
+                                aria-label="Next page"
+                            >
+                                <ChevronRight />
+                            </button>
+                        </div>
 
-                        <button type="button" onClick={(e) =>  {
-                            e.stopPropagation(); 
-                            const index = pageScales.indexOf(pageScale);
-                            if (index > 0) {
-                                setPageScale(pageScales[index - 1]);
-                            } 
-                        }}>
-                            <Minus />
-                        </button>
-                        <span>{Math.round(pageScale * 100)}%</span>
-                        <button type="button" onClick={(e) => {
-                            e.stopPropagation();
-                            const index = pageScales.indexOf(pageScale);
-                            if (index < pageScales.length - 1) {
-                                setPageScale(pageScales[index + 1]);
-                            }
-                        }}>
-                            <Plus />
-                        </button>
+                        <div className="pdf-controls-group pdf-controls-group--zoom">
+                            <button type="button" onClick={zoomOut} aria-label="Zoom out">
+                                <Minus />
+                            </button>
+                            <span>{Math.round(pageScale * 100)}%</span>
+                            <button type="button" onClick={zoomIn} aria-label="Zoom in">
+                                <Plus />
+                            </button>
+                        </div>
                     </div>
                     <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
                     <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>

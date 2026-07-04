@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { Moon, SunMedium } from "lucide-react";
 import Dropzone from "../components/Dropzone";
 import Searchbar from "../components/Searchbar";
 import Historybar from "../components/Historybar";
 
+type SearchProps = {
+    theme: "light" | "dark";
+    onToggleTheme: () => void;
+};
 
-function Search() {
+function Search({ theme, onToggleTheme }: SearchProps) {
     // const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loggedIn, setLoggedIn] = useState(false);
     const logButtonRef = useRef<HTMLButtonElement>(null);
-
     const BACKEND_URL = import.meta.env.VITE_API_URL;
     
     useEffect(() => {
@@ -57,6 +61,15 @@ function Search() {
     return (
         <>
             <Historybar />
+            <button
+                id="theme-toggle-button"
+                type="button"
+                data-theme-current={theme}
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                onClick={onToggleTheme}
+            >
+                {theme === "dark" ? <Moon size={18} /> : <SunMedium size={18} />}
+            </button>
             {!loggedIn && (
                 <button
                     id="login-button"
@@ -95,7 +108,7 @@ function Search() {
                         PDFs are dense. You shouldn't need to know the exact words in a document to find what you're looking for. docsearcher lets you describe the information you need in plain English and finds the 5 most relevant passages for you so you can stop searching and start reading.
                     </p>
                 </div>
-                <Dropzone />
+                <Dropzone theme={theme} />
             </div>
         </>
     )
