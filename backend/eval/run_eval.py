@@ -25,7 +25,7 @@ from sqlalchemy.orm import sessionmaker
 load_dotenv()
 
 import os
-from app.db.base import base
+from app.db.base import Base
 import app.models.user     # noqa: F401
 import app.models.document # noqa: F401
 import app.models.chunk    # noqa: F401
