@@ -14,6 +14,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
     // const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loggedIn, setLoggedIn] = useState(false);
+    const [query, setQuery] = useState("");
     const logButtonRef = useRef<HTMLButtonElement>(null);
     const BACKEND_URL = import.meta.env.VITE_API_URL;
     
@@ -100,7 +101,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     <p id="subtitle">
                         Search PDFs by description, not keywords
                     </p>
-                    <Searchbar />
+                    <Searchbar value={query} onChange={setQuery} />
                     <p id="description">
                         {user && (
                             `${user["email"]}`
@@ -108,7 +109,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                         PDFs are dense. You shouldn't need to know the exact words in a document to find what you're looking for. docsearcher lets you describe the information you need in plain English and finds the 5 most relevant passages for you so you can stop searching and start reading.
                     </p>
                 </div>
-                <Dropzone theme={theme} />
+                <Dropzone theme={theme} query={query} />
             </div>
         </>
     )

@@ -11,9 +11,18 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
  
 type DropzoneProps = {
     theme: "light" | "dark";
+    query: string;
 };
 
-export default function Dropzone({ theme }: DropzoneProps) {
+type Passage = {
+    chunk_id: string;
+    page: number;
+    chunk_index: number;
+    score: number;
+    content: string;
+};
+
+export default function Dropzone({ theme, query }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -22,9 +31,13 @@ export default function Dropzone({ theme }: DropzoneProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState("1");
     const [pageScale, setPageScale] = useState(0.75);
+    const [passages, setPassages] = useState<Passage[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
     const dropzoneBaseColor = theme === "dark" ? "#1b1f27" : "#d5d5d5";
     const dropzoneHoverColor = theme === "dark" ? "#262b37" : "#dfdfdf";
+    const BACKEND_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         if (!dropZoneRef.current) return;
@@ -119,6 +132,50 @@ export default function Dropzone({ theme }: DropzoneProps) {
         inputRef.current?.click();
     };
 
+    const uploadPdf = async (file: File) => {
+        if (!BACKEND_URL) {
+            setUploadError("Backend URL is not configured.");
+            return;
+        }
+
+        if (!query.trim()) {
+            setUploadError("Enter a search query before uploading the PDF.");
+            return;
+        }
+        setPDF(file);
+        setCurrentPage(1);
+        setPageInput("1");
+        setNumPages(0);
+        setPassages([]);
+        setUploadError(null);
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("query", query.trim());
+        formData.append("top_k", "5");
+
+        setIsUploading(true);
+        try {
+            const response = await fetch(`${BACKEND_URL}/search-pdf`, {
+                method: "POST",
+                credentials: "include",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const message = await response.text();
+                throw new Error(message || "Failed to upload and search PDF.");
+            }
+
+            const data = await response.json();
+            setPassages(data.passages ?? []);
+        } catch (error) {
+            setUploadError(error instanceof Error ? error.message : "Failed to upload and search PDF.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleMouseEnter = () => {
         if (!dropZoneRef.current || dropZoneRef.current?.classList.contains('has-pdf')) return;
 
@@ -144,11 +201,22 @@ export default function Dropzone({ theme }: DropzoneProps) {
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setPDF(file);
-            setCurrentPage(1);
-            setPageInput("1");
-            setNumPages(0);
+            void uploadPdf(file);
         }
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            void uploadPdf(file);
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
     };
 
     const handleResubmit = () => {
@@ -157,6 +225,8 @@ export default function Dropzone({ theme }: DropzoneProps) {
         setCurrentPage(1);
         setPageInput("1");
         setPageScale(0.75);
+        setPassages([]);
+        setUploadError(null);
         if (inputRef.current) {
             inputRef.current.value = "";
         }
@@ -171,6 +241,8 @@ export default function Dropzone({ theme }: DropzoneProps) {
                     onClick={handleClick}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
                     className={PDF ? "has-pdf" : "no-pdf"}
                 >
                     <div
@@ -245,6 +317,8 @@ export default function Dropzone({ theme }: DropzoneProps) {
                     </div>
                     <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
                     <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>
+                    {isUploading && <p className="upload-status">Uploading and searching…</p>}
+                    {uploadError && <p className="upload-error">{uploadError}</p>}
                     {PDF && (
                         <Document file={PDF} onLoadSuccess={({ numPages }) => {
                             setNumPages(numPages);
@@ -265,6 +339,23 @@ export default function Dropzone({ theme }: DropzoneProps) {
                                 ))}
                             </div>
                         </Document>
+                    )}
+                    {!!passages.length && (
+                        <div className="passage-results">
+                            <h3>Relevant passages</h3>
+                            <ul>
+                                {passages.map((passage) => (
+                                    <li key={passage.chunk_id}>
+                                        <div className="passage-meta">
+                                            <span>Page {passage.page}</span>
+                                            <span>Chunk {passage.chunk_index + 1}</span>
+                                            <span>{Math.round(passage.score * 100)}%</span>
+                                        </div>
+                                        <p>{passage.content}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     )}
                 </div>
                 {PDF && (

@@ -2,7 +2,12 @@ import { useRef } from "react";
 import { gsap } from "gsap";
 import { Search } from "lucide-react";
 
-export default function Searchbar() {
+type SearchbarProps = {
+    value: string;
+    onChange: (value: string) => void;
+};
+
+export default function Searchbar({ value, onChange }: SearchbarProps) {
     const searchBarRef = useRef<HTMLDivElement>(null);
 
     const handleMouseEnter = () => {
@@ -38,6 +43,8 @@ export default function Searchbar() {
                     type="text"
                     placeholder="Search"
                     autoComplete="off"
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
                 />
             </div>
         </>

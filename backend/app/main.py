@@ -1,14 +1,18 @@
 import os
+import uuid
 from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base, engine
+from app.models.document import Document
 from app.models import *
+from app.services.indexing import IndexingService
+from app.services.search import SearchService
 from app.services.user import UserService
 
 load_dotenv()
@@ -83,3 +87,56 @@ async def me(request: Request):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user
+
+
+@app.post('/search-pdf')
+async def search_pdf(
+    request: Request,
+    file: UploadFile = File(...),
+    query: str = Form(...),
+    top_k: int = Form(5),
+):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    pdf_bytes = await file.read()
+    if not pdf_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    user_id = uuid.UUID(user["id"])
+
+    with Session(engine) as session:
+        doc = Document(
+            user_id=user_id,
+            filename=file.filename or "uploaded.pdf",
+            storage_path=f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}",
+            status="uploaded",
+        )
+        session.add(doc)
+        session.commit()
+        session.refresh(doc)
+
+        IndexingService(session).index_document(doc.id, pdf_bytes)
+        results = SearchService(session).search(
+            query=query,
+            user_id=user_id,
+            document_id=doc.id,
+            top_k=top_k,
+        )
+
+        return {
+            "document_id": str(doc.id),
+            "filename": doc.filename,
+            "query": query,
+            "passages": [
+                {
+                    "chunk_id": str(result.chunk_id),
+                    "page": result.page,
+                    "chunk_index": result.chunk_index,
+                    "score": result.score,
+                    "content": result.content,
+                }
+                for result in results
+            ],
+        }
