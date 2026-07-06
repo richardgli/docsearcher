@@ -7,3 +7,4 @@ __pycache__/
 node_modules/
 .python-version
 pdfs/
+.DS_Store
