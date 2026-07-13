@@ -5,6 +5,14 @@ import Dropzone from "../components/Dropzone";
 import Searchbar from "../components/Searchbar";
 import Historybar from "../components/Historybar";
 
+type Passage = {
+    chunk_id: string;
+    page: number;
+    chunk_index: number;
+    score: number;
+    content: string;
+};
+
 type SearchProps = {
     theme: "light" | "dark";
     onToggleTheme: () => void;
@@ -15,7 +23,10 @@ function Search({ theme, onToggleTheme }: SearchProps) {
     const [user, setUser] = useState(null);
     const [loggedIn, setLoggedIn] = useState(false);
     const [query, setQuery] = useState("");
+    const [passages, setPassages] = useState<Passage[]>([]);
     const logButtonRef = useRef<HTMLButtonElement>(null);
+    const titleParagraphRef = useRef<HTMLParagraphElement>(null);
+    const searchBarRef = useRef<HTMLDivElement>(null);
     const BACKEND_URL = import.meta.env.VITE_API_URL;
     
     useEffect(() => {
@@ -38,6 +49,34 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     // else Navigate('/login')
                 })
     }, []);
+
+    useEffect(() => {
+        if (!titleParagraphRef || !searchBarRef) return;
+
+        if (passages.length != 0) {
+            gsap.to(titleParagraphRef.current, {
+                y: -140,
+                duration: 0.5,
+                ease: "power2.out"
+            })
+            gsap.to(searchBarRef.current, {
+                y: -130,
+                duration: 0.5,
+                ease: "power2.out"
+            })
+        } else {
+            gsap.to(titleParagraphRef.current, {
+                y: 0,
+                duration: 0.5,
+                ease: "power2.out"
+            })
+            gsap.to(searchBarRef.current, {
+                y: 0,
+                duration: 0.5,
+                ease: "power2.out"
+            })
+        }
+    }, [passages]);
 
     const handleMouseEnter = () => {
         if (!logButtonRef.current) return;
@@ -97,19 +136,39 @@ function Search({ theme, onToggleTheme }: SearchProps) {
             )}
             <div className="background">
                 <div className="main-title">
-                    <p id="title">docsearcher</p>
-                    <p id="subtitle">
-                        Search PDFs by description, not keywords
-                    </p>
-                    <Searchbar value={query} onChange={setQuery} />
-                    <p id="description">
-                        {user && (
-                            `${user["email"]}`
+                    <p id="title" ref={titleParagraphRef}>docsearcher</p>
+                    {!passages.length && (
+                        <p id="subtitle">
+                            Search PDFs by description, not keywords
+                        </p>
+                    )}
+                    <div ref={searchBarRef}>
+                        <Searchbar value={query} onChange={setQuery} />
+                        {passages.length > 0 && (
+                            <div className="passage-results passage-results--search">
+                                <h3>Relevant passages</h3>
+                                <ul>
+                                    {passages.map((passage) => (
+                                        <li key={passage.chunk_id}>
+                                            <div className="passage-meta">
+                                                <span>Page {passage.page}</span>
+                                                <span>Chunk {passage.chunk_index + 1}</span>
+                                                <span>{Math.round(passage.score * 100)}%</span>
+                                            </div>
+                                            <p>{passage.content}</p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         )}
-                        PDFs are dense. You shouldn't need to know the exact words in a document to find what you're looking for. docsearcher lets you describe the information you need in plain English and finds the 5 most relevant passages for you so you can stop searching and start reading.
-                    </p>
+                    </div>
+                    {!passages.length && (
+                        <p id="description">
+                            PDFs are dense. You shouldn't need to know the exact words in a document to find what you're looking for. docsearcher lets you describe the information you need in plain English and finds the 5 most relevant passages for you so you can stop searching and start reading.
+                        </p>
+                    )}
                 </div>
-                <Dropzone theme={theme} query={query} />
+                <Dropzone theme={theme} query={query} onPassagesChange={setPassages} />
             </div>
         </>
     )

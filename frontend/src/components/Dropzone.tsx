@@ -12,6 +12,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 type DropzoneProps = {
     theme: "light" | "dark";
     query: string;
+    onPassagesChange: (passages: Passage[]) => void;
 };
 
 type Passage = {
@@ -22,7 +23,7 @@ type Passage = {
     content: string;
 };
 
-export default function Dropzone({ theme, query }: DropzoneProps) {
+export default function Dropzone({ theme, query, onPassagesChange }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -31,7 +32,6 @@ export default function Dropzone({ theme, query }: DropzoneProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState("1");
     const [pageScale, setPageScale] = useState(0.75);
-    const [passages, setPassages] = useState<Passage[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
@@ -146,7 +146,7 @@ export default function Dropzone({ theme, query }: DropzoneProps) {
         setCurrentPage(1);
         setPageInput("1");
         setNumPages(0);
-        setPassages([]);
+        onPassagesChange([]);
         setUploadError(null);
 
         const formData = new FormData();
@@ -168,7 +168,8 @@ export default function Dropzone({ theme, query }: DropzoneProps) {
             }
 
             const data = await response.json();
-            setPassages(data.passages ?? []);
+            const nextPassages = data.passages ?? [];
+            onPassagesChange(nextPassages);
         } catch (error) {
             setUploadError(error instanceof Error ? error.message : "Failed to upload and search PDF.");
         } finally {
@@ -225,7 +226,7 @@ export default function Dropzone({ theme, query }: DropzoneProps) {
         setCurrentPage(1);
         setPageInput("1");
         setPageScale(0.75);
-        setPassages([]);
+        onPassagesChange([]);
         setUploadError(null);
         if (inputRef.current) {
             inputRef.current.value = "";
@@ -339,23 +340,6 @@ export default function Dropzone({ theme, query }: DropzoneProps) {
                                 ))}
                             </div>
                         </Document>
-                    )}
-                    {!!passages.length && (
-                        <div className="passage-results">
-                            <h3>Relevant passages</h3>
-                            <ul>
-                                {passages.map((passage) => (
-                                    <li key={passage.chunk_id}>
-                                        <div className="passage-meta">
-                                            <span>Page {passage.page}</span>
-                                            <span>Chunk {passage.chunk_index + 1}</span>
-                                            <span>{Math.round(passage.score * 100)}%</span>
-                                        </div>
-                                        <p>{passage.content}</p>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
                     )}
                 </div>
                 {PDF && (

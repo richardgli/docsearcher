@@ -153,6 +153,7 @@ body {
     flex-direction: column;
     align-items: center;
     margin: 10vh 5% 0 auto;
+    scrollbar-width: thin;
 }
 
 #drop-zone {
@@ -328,6 +329,15 @@ body {
     border: 2px solid var(--border-color);
     background: var(--surface-bg);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+}
+
+.passage-results--search {
+    width: min(40vw, 40rem);
+    align-self: center;
+    margin-top: 1rem;
+    max-height: 55vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
 }
 
 .passage-results h3 {
