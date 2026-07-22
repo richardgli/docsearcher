@@ -17,7 +17,6 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
     "jsx": "react-jsx",
 
     /* Linting */
