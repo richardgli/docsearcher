@@ -1,0 +1,93 @@
+{
+    "documents": [
+      {
+        "filename": "mongol_invasion.pdf",
+        "description": "history"
+      },
+      {
+        "filename": "tree.pdf", 
+        "description": "nature"
+      },
+      {
+        "filename": "economics.pdf",
+        "description": "money"
+      }
+    ],
+    "queries": [
+      {
+        "query": "discovery of gold in japan",
+        "document": "mongol_invasion.pdf",
+        "relevant_pages": [11]
+      },
+      {
+        "query": "horseback fighting styles of the mongols",
+        "document": "mongol_invasion.pdf",
+        "relevant_pages": [26]
+      },
+      {
+        "query": "type of armour the mongol heavy horseman wore",
+        "document": "mongol_invasion.pdf",
+        "relevant_pages": [31]
+      },
+      {
+        "query": "the invasion of tsushima",
+        "document": "mongol_invasion.pdf",
+        "relevant_pages": [34]
+      },
+      {
+        "query": "the invasion of iki",
+        "document": "mongol_invasion.pdf",
+        "relevant_pages": [37]
+      },
+      {
+        "query": "the photosynthesis process",
+        "document": "tree.pdf",
+        "relevant_pages": [4]
+      },
+      {
+        "query": "movement of water out of a membrane",
+        "document": "tree.pdf",
+        "relevant_pages": [6]
+      },
+      {
+        "query": "where is the living part of the tree found",
+        "document": "tree.pdf",
+        "relevant_pages": [8]
+      },
+      {
+        "query": "what carries nutrients to the roots of the tree",
+        "document": "tree.pdf",
+        "relevant_pages": [10]
+      },
+      {
+        "query": "types of energy used by a tree to grow",
+        "document": "tree.pdf",
+        "relevant_pages": [13]
+      },
+      {
+        "query": "difference between macroeconomics and microeconomics",
+        "document": "economics.pdf",
+        "relevant_pages": [7]
+      },
+      {
+        "query": "the definition of opportunity cost",
+        "document": "economics.pdf",
+        "relevant_pages": [11]
+      },
+      {
+        "query": "main features of a socialist economy",
+        "document": "economics.pdf",
+        "relevant_pages": [17]
+      },
+      {
+        "query": "a shift in demand",
+        "document": "economics.pdf",
+        "relevant_pages": [29]
+      },
+      {
+        "query": "change in both demand and supply",
+        "document": "economics.pdf",
+        "relevant_pages": [40]
+      }
+    ]
+  }
