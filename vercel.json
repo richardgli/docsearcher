@@ -4,7 +4,7 @@
         { "src": "backend/main.py", "use": "@vercel/python" }
     ],
     "routes": [
-        { "source": "/api/(.*)", "dest": "backend/main.py" },
+        { "source": "/api/(.*)", "dest": "/backend/main.py" },
         { "src": "/assets/(.*)", "dest": "/frontend/assets/$1" },
         { "src": "/vite.svg", "dest": "/frontend/vite.svg" },
         { "src": "/(.*)", "dest": "/frontend/index.html" }
