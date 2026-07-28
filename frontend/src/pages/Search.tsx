@@ -39,7 +39,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
             .fromTo("#description", { opacity: 0, y: 150 }, { opacity: 1, y: 0 }, "introDone")
             .fromTo("#login-button", { opacity: 0, y: -30 }, { opacity: 1, y: 0 }, "introDone");
         
-            fetch(`${BACKEND_URL}/me`, { credentials: 'include' })
+            fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' })
                 .then(res => res.ok ? res.json() : null)
                 .then(user => {
                     if (user) {
@@ -117,7 +117,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     ref={logButtonRef}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
-                    onClick={() => window.location.href = `${BACKEND_URL}/login`}
+                    onClick={() => window.location.href = `${BACKEND_URL}/api/login`}
                 >
                     Login
                 </button>
@@ -129,7 +129,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     ref={logButtonRef}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
-                    onClick={() => window.location.href = `${BACKEND_URL}/logout`}
+                    onClick={() => window.location.href = `${BACKEND_URL}/api/logout`}
                 >
                     Logout{user && user["email"]}
                 </button>

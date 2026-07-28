@@ -50,24 +50,20 @@ async def root(request: Request):
         return { user['email'] }
     return { "message": "Not logged in" }
 
-@app.get('/login')
+@app.get('/api/login')
 async def login(request: Request):
     redirect_uri = request.url_for("auth")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
-@app.get('/auth')
+@app.get('/api/auth')
 async def auth(request: Request):
-    print("authorizing")
     token = await oauth.google.authorize_access_token(request)
     userinfo = token.get("userinfo")
-    print(userinfo)
     with Session(engine) as session:
         ser = UserService(session)
-        print("instantiating db session")
 
         # Return existing user if found in database; otherwise create new user
         user = ser.get_or_create(userinfo['email'])
-        print("created user")
         
     request.session["user"] = {"id": str(user.id), "email": user.email}
     # Testing user retrieval/creation
@@ -75,13 +71,13 @@ async def auth(request: Request):
     FRONTEND_URL = os.getenv('FRONTEND_URL')
     return RedirectResponse(f'{FRONTEND_URL}/')
 
-@app.get('/logout')
+@app.get('/api/logout')
 async def logout(request: Request):
     request.session.pop("user", None)
     FRONTEND_URL = os.getenv('FRONTEND_URL')
     return RedirectResponse(f'{FRONTEND_URL}/')
 
-@app.get('/me')
+@app.get('/api/me')
 async def me(request: Request):
     user = request.session.get("user")
     if not user:
@@ -89,7 +85,7 @@ async def me(request: Request):
     return user
 
 
-@app.post('/search-pdf')
+@app.post('/api/search-pdf')
 async def search_pdf(
     request: Request,
     file: UploadFile = File(...),
