@@ -4,7 +4,7 @@
         { "src": "backend/main.py", "use": "@vercel/python" }
     ],
     "routes": [
-        { "source": "/api/(.*)", "destination": "backend/main.py" },
-        { "source": "/(.*)", "destination": "/index.html"}
+        { "source": "/api/(.*)", "dest": "backend/main.py" },
+        { "source": "/(.*)", "dest": "/index.html"}
     ]
 }
