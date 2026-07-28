@@ -8,12 +8,12 @@ from sqlalchemy.orm import Session
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from app.db.base import Base, engine
-from app.models.document import Document
-from app.models import *
-from app.services.indexing import IndexingService
-from app.services.search import SearchService
-from app.services.user import UserService
+from backend.app.db.base import Base, engine
+from backend.app.models.document import Document
+from backend.app.models import *
+from backend.app.services.indexing import IndexingService
+from backend.app.services.search import SearchService
+from backend.app.services.user import UserService
 
 load_dotenv()
 
