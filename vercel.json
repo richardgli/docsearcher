@@ -5,6 +5,8 @@
     ],
     "routes": [
         { "source": "/api/(.*)", "dest": "backend/main.py" },
-        { "source": "/(.*)", "dest": "/index.html"}
+        { "src": "/assets/(.*)", "dest": "/frontend/assets/$1" },
+        { "src": "/vite.svg", "dest": "/frontend/vite.svg" },
+        { "src": "/(.*)", "dest": "/frontend/index.html" }
     ]
 }
