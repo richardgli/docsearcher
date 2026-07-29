@@ -15,7 +15,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from app.models.chunk import Chunk, EMBEDDING_DIM
+from backend.app.models.chunk import Chunk, EMBEDDING_DIM
 
 EMBED_MODEL = "text-embedding-3-small"
 DEFAULT_TOP_K = 5

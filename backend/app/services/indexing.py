@@ -21,8 +21,8 @@ import tiktoken
 from openai import OpenAI
 from sqlalchemy.orm import Session
 
-from app.models.chunk import Chunk, EMBEDDING_DIM
-from app.models.document import Document
+from backend.app.models.chunk import Chunk, EMBEDDING_DIM
+from backend.app.models.document import Document
 
 CHUNK_TOKENS = 400
 OVERLAP_TOKENS = 80
