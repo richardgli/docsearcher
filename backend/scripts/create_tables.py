@@ -11,11 +11,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import models so Base.metadata knows about them
-from app.db.base import Base
-from app.db.session import engine
-import app.models.document  # noqa: F401
-import app.models.chunk     # noqa: F401
-import app.models.user      # noqa: F401
+from backend.app.db.base import Base
+from backend.app.db.session import engine
+import backend.app.models.document  # noqa: F401
+import backend.app.models.chunk     # noqa: F401
+import backend.app.models.user      # noqa: F401
 
 
 def main() -> None:
