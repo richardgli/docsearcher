@@ -131,7 +131,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     onMouseLeave={handleMouseLeave}
                     onClick={() => window.location.href = `${BACKEND_URL}/api/logout`}
                 >
-                    Logout{user && user["email"]}
+                    Logout
                 </button>
             )}
             <div className="background">
