@@ -156,8 +156,6 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         window.location.href = `${BACKEND_URL}/api/logout`;
     };
 
-    const profileName = user?.name || "";
-
     return (
         <>
             <Historybar />
