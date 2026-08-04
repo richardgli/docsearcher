@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { Moon, SunMedium } from "lucide-react";
+import { Moon, SunMedium, User } from "lucide-react";
 import Dropzone from "../components/Dropzone";
 import Searchbar from "../components/Searchbar";
 import Historybar from "../components/Historybar";
@@ -20,7 +20,7 @@ type SearchProps = {
 
 type LoggedInUser = {
     email?: string;
-    username?: string;
+    name?: string;
 };
 
 function Search({ theme, onToggleTheme }: SearchProps) {
@@ -121,8 +121,10 @@ function Search({ theme, onToggleTheme }: SearchProps) {
     const handleMouseEnter = () => {
         if (!logButtonRef.current) return;
 
+        const enterPos = theme === "dark" ? "0% 100%" : "75% 100%";
+
         gsap.to(logButtonRef.current, {
-            backgroundPosition: "75% 100%",
+            backgroundPosition: enterPos,
             duration: 0.5,
             ease: "power2.out",
         });
@@ -131,8 +133,10 @@ function Search({ theme, onToggleTheme }: SearchProps) {
     const handleMouseLeave = () => {
         if (!logButtonRef.current) return;
 
+        const leavePos = theme === "dark" ? "75% 100%" : "0% 100%";
+
         gsap.to(logButtonRef.current, {
-            backgroundPosition: "0% 100%",
+            backgroundPosition: leavePos,
             duration: 0.5,
             ease: "power2.out",
         });
@@ -152,7 +156,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         window.location.href = `${BACKEND_URL}/api/logout`;
     };
 
-    const profileName = user?.username || user?.email || "Account";
+    const profileName = user?.name || "";
 
     return (
         <>
@@ -174,26 +178,24 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                     onClick={handleAuthButtonClick}
-                    title={loggedIn ? `Open profile menu for ${profileName}` : "Login"}
                     aria-expanded={loggedIn ? isProfileMenuOpen : undefined}
                     aria-haspopup={loggedIn ? "menu" : undefined}
                 >
-                    {loggedIn ? profileName : "Login"}
+                    {loggedIn ? <User size={18} /> : "Login"}
                 </button>
                 {loggedIn && isProfileMenuOpen && (
                     <div id="profile-menu" role="menu" aria-label="Profile menu">
                         <div className="profile-menu__header">
                             <span className="profile-menu__label">Signed in as</span>
-                            <strong>{profileName}</strong>
                         </div>
                         <div className="profile-menu__details">
                             <p>
-                                <span>Email</span>
-                                <strong>{user?.email || "Not available"}</strong>
+                                <span>Username</span>
+                                <strong>{user?.name || "Not available"}</strong>
                             </p>
                             <p>
-                                <span>Username</span>
-                                <strong>{user?.username || "Not available"}</strong>
+                                <span>Email</span>
+                                <strong>{user?.email || "Not available"}</strong>
                             </p>
                         </div>
                         <button
@@ -215,7 +217,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                         </p>
                     )}
                     <div ref={searchBarRef}>
-                        <Searchbar value={query} onChange={setQuery} />
+                        <Searchbar value={query} onChange={setQuery} theme={theme} />
                         {passages.length > 0 && (
                             <div className="passage-results passage-results--search">
                                 <h3>Relevant passages</h3>
