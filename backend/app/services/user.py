@@ -19,7 +19,7 @@ class UserService:
     def __init__(self, db: Session) -> None:
         self.db = db
     
-    def get_or_create(self, email: str) -> User:
+    def get_or_create(self, email: str, name: str | None = None) -> User:
         """
         Upsert a user by email. Call this immediately after verifying the Google OAuth token.
         
@@ -28,8 +28,11 @@ class UserService:
         user = self.db.query(User).filter(User.email == email).first()
         
         if user is None:
-            user = User(email=email)
+            user = User(email=email, name=name)
             self.db.add(user)
+        else:
+            if name and user.name != name:
+                user.name = name
 
         user.last_login = datetime.now(timezone.utc)
         self.db.commit()

@@ -59,13 +59,14 @@ async def login(request: Request):
 async def auth(request: Request):
     token = await oauth.google.authorize_access_token(request)
     userinfo = token.get("userinfo")
+    print(userinfo)
     with Session(engine) as session:
         ser = UserService(session)
 
         # Return existing user if found in database; otherwise create new user
-        user = ser.get_or_create(userinfo['email'])
+        user = ser.get_or_create(userinfo['email'], userinfo.get('name'))
         
-    request.session["user"] = {"id": str(user.id), "email": user.email}
+    request.session["user"] = {"id": str(user.id), "email": user.email, "name": user.name}
     # Testing user retrieval/creation
     # return RedirectResponse('/')
     FRONTEND_URL = os.getenv('FRONTEND_URL')
