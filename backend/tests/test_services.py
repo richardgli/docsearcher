@@ -26,6 +26,7 @@ from app.models.document import Document
 from app.models.user import User
 from app.models.chunk import Chunk
 from app.services.indexing import IndexingService, extract_chunks, CHUNK_TOKENS
+from app.services.documents import calculate_checksum, get_document_by_checksum
 from app.services.search import SearchService
 
 # Fixtures
@@ -54,10 +55,13 @@ def sample_user_and_doc(db):
     db.add(user)
     db.flush()  # get user.id but without committing
 
+    pdf = _make_minimal_pdf()
+
     doc = Document(
         user_id=user.id,
         filename="sample.pdf",
         storage_path="test/sample.pdf",
+        checksum_sha256=calculate_checksum(pdf),
         status="uploaded",
     )
     db.add(doc)
@@ -122,6 +126,18 @@ def test_reindex_replaces_chunks(db, sample_user_and_doc):
     IndexingService(db).index_document(doc.id, pdf)
     second_count = db.query(Chunk).filter(Chunk.document_id == doc.id).count()
     assert first_count == second_count
+
+
+def test_checksum_identifies_existing_document(db, sample_user_and_doc):
+    user, doc = sample_user_and_doc
+    duplicate_pdf = _make_minimal_pdf()
+    checksum = calculate_checksum(duplicate_pdf)
+
+    found = get_document_by_checksum(db, user.id, checksum)
+
+    assert found is not None
+    assert found.id == doc.id
+    assert found.checksum_sha256 == checksum
 
 # SearchService integration tests
 
