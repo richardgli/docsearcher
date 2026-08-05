@@ -108,7 +108,7 @@ async def search_pdf(
 
     with Session(engine) as session:
         doc = get_document_by_checksum(session, user_id, checksum)
-        print(doc)
+
         if doc is None:
             doc = Document(
                 user_id=user_id,
@@ -120,11 +120,10 @@ async def search_pdf(
             session.add(doc)
             session.commit()
             session.refresh(doc)
-            print("new doc")
 
         if doc.status != "indexed":
             IndexingService(session).index_document(doc.id, pdf_bytes)
-        print("searching")
+
         results = SearchService(session).search(
             query=query,
             user_id=user_id,
