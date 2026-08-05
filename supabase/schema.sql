@@ -3,6 +3,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- users
 CREATE TABLE IF NOT EXISTS users (
     id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT,
     email       TEXT        NOT NULL UNIQUE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     last_login  TIMESTAMPTZ
@@ -21,6 +22,9 @@ CREATE TABLE IF NOT EXISTS documents (
 
 CREATE INDEX IF NOT EXISTS ix_documents_user_created
     ON documents (user_id, created_at);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_documents_user_checksum
+    ON documents (user_id, checksum_sha256);
 
 -- chunks
 CREATE TABLE IF NOT EXISTS chunks (

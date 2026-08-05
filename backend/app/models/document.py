@@ -40,4 +40,10 @@ class Document(Base):
 
     __table_args__ = (
         Index("ix_documents_user_created", "user_id", "created_at"),
+        Index(
+            "uq_documents_user_checksum",
+            "user_id",
+            "checksum_sha256",
+            unique=True,
+        ),
     )

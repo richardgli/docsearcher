@@ -404,7 +404,7 @@ body {
 }
 
 .passage-results {
-    width: min(34vw, 34rem);
+    width: 40vw;
     margin: 1.25rem 0 0;
     padding: 1rem;
     border: 2px solid var(--border-color);
@@ -413,7 +413,7 @@ body {
 }
 
 .passage-results--search {
-    width: min(40vw, 40rem);
+    width: 40vw;
     align-self: center;
     margin-top: 1rem;
     max-height: 55vh;

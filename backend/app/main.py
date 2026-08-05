@@ -12,6 +12,10 @@ from backend.app.db.base import Base, engine
 from backend.app.models.document import Document
 from backend.app.models import *
 from backend.app.services.indexing import IndexingService
+from backend.app.services.documents import (
+    calculate_checksum,
+    get_document_by_checksum,
+)
 from backend.app.services.search import SearchService
 from backend.app.services.user import UserService
 
@@ -100,19 +104,26 @@ async def search_pdf(
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
     user_id = uuid.UUID(user["id"])
+    checksum = calculate_checksum(pdf_bytes)
 
     with Session(engine) as session:
-        doc = Document(
-            user_id=user_id,
-            filename=file.filename or "uploaded.pdf",
-            storage_path=f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}",
-            status="uploaded",
-        )
-        session.add(doc)
-        session.commit()
-        session.refresh(doc)
+        doc = get_document_by_checksum(session, user_id, checksum)
 
-        IndexingService(session).index_document(doc.id, pdf_bytes)
+        if doc is None:
+            doc = Document(
+                user_id=user_id,
+                filename=file.filename or "uploaded.pdf",
+                storage_path=f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}",
+                checksum_sha256=checksum,
+                status="uploaded",
+            )
+            session.add(doc)
+            session.commit()
+            session.refresh(doc)
+
+        if doc.status != "indexed":
+            IndexingService(session).index_document(doc.id, pdf_bytes)
+
         results = SearchService(session).search(
             query=query,
             user_id=user_id,

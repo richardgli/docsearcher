@@ -156,7 +156,7 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
 
         setIsUploading(true);
         try {
-            const response = await fetch(`${BACKEND_URL}/search-pdf`, {
+            const response = await fetch(`${BACKEND_URL}/api/search-pdf`, {
                 method: "POST",
                 credentials: "include",
                 body: formData,
