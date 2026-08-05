@@ -25,7 +25,6 @@ oauth.register(
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={
         "scope": "openid email profile",
-        "prompt": "consent",
     },
 )   
 
@@ -67,8 +66,7 @@ async def auth(request: Request):
         user = ser.get_or_create(userinfo['email'], userinfo.get('name'))
         
     request.session["user"] = {"id": str(user.id), "email": user.email, "name": user.name}
-    # Testing user retrieval/creation
-    # return RedirectResponse('/')
+
     FRONTEND_URL = os.getenv('FRONTEND_URL')
     return RedirectResponse(f'{FRONTEND_URL}/')
 
