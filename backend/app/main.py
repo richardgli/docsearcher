@@ -58,7 +58,7 @@ async def login(request: Request):
 async def auth(request: Request):
     token = await oauth.google.authorize_access_token(request)
     userinfo = token.get("userinfo")
-    print(userinfo)
+
     with Session(engine) as session:
         ser = UserService(session)
 
