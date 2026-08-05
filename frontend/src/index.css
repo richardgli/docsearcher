@@ -62,7 +62,7 @@ body {
     transition: background-color 0.35s ease, color 0.35s ease;
 }
 
-#login-button, #logout-button {
+#login-button {
     background: var(--login-gradient);
     background-size: 200%;
     position: fixed;
@@ -77,7 +77,88 @@ body {
     color: var(--page-text);
     cursor: pointer;
     z-index: 10;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.profile-menu-anchor {
+    position: fixed;
+    top: 2vh;
+    right: 5%;
+    z-index: 20;
+}
+
+#login-button {
+    position: relative;
+    top: auto;
+    right: auto;
+}
+
+#profile-menu {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    width: min(18rem, calc(100vw - 2rem));
+    padding: 0.9rem;
+    border: 2px solid var(--border-color);
+    border-radius: 1rem;
+    background: var(--surface-bg);
+    color: var(--page-text);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+    display: grid;
+    gap: 0.85rem;
+}
+
+.profile-menu__header {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.profile-menu__label {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.profile-menu__details {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.profile-menu__details p {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.profile-menu__details span {
+    font-size: 0.75rem;
+    opacity: 0.75;
+}
+
+.profile-menu__details strong {
+    font-size: 0.95rem;
+    word-break: break-word;
+}
+
+#profile-logout-button {
+    width: 100%;
+    min-height: 2.6rem;
+    border: 2px solid var(--border-color);
+    border-radius: 0.8rem;
+    background: var(--page-bg);
+    color: var(--page-text);
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+}
+
+#profile-logout-button:hover,
+#profile-logout-button:focus-visible {
+    transform: translateY(-1px);
+    background: var(--hover-surface);
 }
 
 #theme-toggle-button {
