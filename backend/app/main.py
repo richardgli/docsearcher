@@ -15,6 +15,7 @@ from backend.app.services.indexing import IndexingService
 from backend.app.services.documents import (
     calculate_checksum,
     get_document_by_checksum,
+    list_documents_for_user,
 )
 from backend.app.services.search import SearchService
 from backend.app.services.user import UserService
@@ -86,6 +87,30 @@ async def me(request: Request):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user
+
+
+@app.get('/api/documents')
+async def documents(request: Request):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user_id = uuid.UUID(user["id"])
+
+    with Session(engine) as session:
+        docs = list_documents_for_user(session, user_id)
+        return {
+            "documents": [
+                {
+                    "id": str(doc.id),
+                    "filename": doc.filename,
+                    "storage_path": doc.storage_path,
+                    "status": doc.status,
+                    "created_at": doc.created_at.isoformat(),
+                }
+                for doc in docs
+            ]
+        }
 
 
 @app.post('/api/search-pdf')

@@ -26,3 +26,15 @@ def get_document_by_checksum(
         .order_by(Document.created_at.desc())
         .first()
     )
+
+
+def list_documents_for_user(
+    db: Session,
+    user_id: uuid.UUID,
+) -> list[Document]:
+    return (
+        db.query(Document)
+        .filter(Document.user_id == user_id)
+        .order_by(Document.created_at.desc())
+        .all()
+    )
