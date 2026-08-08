@@ -559,6 +559,10 @@ body {
     transition: background-color 0.35s ease;
 }
 
+.sidebar-overlay ~ .profile-menu-anchor {
+    z-index: 13;
+}
+
 #sidebar {
     position: fixed;
     left: 0;
