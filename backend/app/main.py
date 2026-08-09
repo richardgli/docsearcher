@@ -47,6 +47,28 @@ app.add_middleware(
 )
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
 
+
+def _get_or_create_document(session: Session, user_id: uuid.UUID, file, pdf_bytes: bytes) -> Document:
+    checksum = calculate_checksum(pdf_bytes)
+    doc = get_document_by_checksum(session, user_id, checksum)
+
+    if doc is None:
+        doc = Document(
+            user_id=user_id,
+            filename=file.filename or "uploaded.pdf",
+            storage_path=f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}",
+            checksum_sha256=checksum,
+            status="uploaded",
+        )
+        session.add(doc)
+        session.commit()
+        session.refresh(doc)
+
+    if doc.status != "indexed":
+        IndexingService(session).index_document(doc.id, pdf_bytes)
+
+    return doc
+
 @app.get('/')
 async def root(request: Request):
     user = request.session.get("user")
@@ -113,12 +135,10 @@ async def documents(request: Request):
         }
 
 
-@app.post('/api/search-pdf')
-async def search_pdf(
+@app.post('/api/upload-pdf')
+async def upload_pdf(
     request: Request,
     file: UploadFile = File(...),
-    query: str = Form(...),
-    top_k: int = Form(5),
 ):
     user = request.session.get("user")
     if not user:
@@ -129,25 +149,48 @@ async def search_pdf(
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
     user_id = uuid.UUID(user["id"])
-    checksum = calculate_checksum(pdf_bytes)
 
     with Session(engine) as session:
-        doc = get_document_by_checksum(session, user_id, checksum)
+        doc = _get_or_create_document(session, user_id, file, pdf_bytes)
 
-        if doc is None:
-            doc = Document(
-                user_id=user_id,
-                filename=file.filename or "uploaded.pdf",
-                storage_path=f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}",
-                checksum_sha256=checksum,
-                status="uploaded",
-            )
-            session.add(doc)
-            session.commit()
-            session.refresh(doc)
+        return {
+            "document_id": str(doc.id),
+            "filename": doc.filename,
+            "status": doc.status,
+        }
 
-        if doc.status != "indexed":
-            IndexingService(session).index_document(doc.id, pdf_bytes)
+
+@app.post('/api/search-pdf')
+async def search_pdf(
+    request: Request,
+    file: UploadFile | None = File(None),
+    document_id: str | None = Form(None),
+    query: str = Form(...),
+    top_k: int = Form(5),
+):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user_id = uuid.UUID(user["id"])
+
+    with Session(engine) as session:
+        if document_id:
+            try:
+                document_uuid = uuid.UUID(document_id)
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail="Invalid document_id") from exc
+
+            doc = session.get(Document, document_uuid)
+            if doc is None or doc.user_id != user_id:
+                raise HTTPException(status_code=404, detail="Document not found")
+        elif file is not None:
+            pdf_bytes = await file.read()
+            if not pdf_bytes:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty")
+            doc = _get_or_create_document(session, user_id, file, pdf_bytes)
+        else:
+            raise HTTPException(status_code=400, detail="Provide a document_id or upload a PDF")
 
         results = SearchService(session).search(
             query=query,
