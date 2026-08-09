@@ -643,6 +643,20 @@ body {
     background: var(--search-gradient);
 }
 
+/* Stack filename and date on separate lines inside history list items */
+.history-list li button > span {
+    display: block;
+    font-weight: 600;
+}
+
+.history-list li button > small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    color: var(--page-text);
+}
+
 .sidebar-content p {
     display: flex;
     justify-content: center;
