@@ -5,22 +5,25 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Response
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
+
 from backend.app.db.base import Base, engine
 from backend.app.models.document import Document
 from backend.app.models import *
-from backend.app.services.indexing import IndexingService
 from backend.app.services.documents import (
-    calculate_checksum,
-    get_document_by_checksum,
     get_document_by_id,
     list_documents_for_user,
 )
 from backend.app.services.search import SearchService
 from backend.app.services.user import UserService
+from backend.app.utils.route_helpers import (
+    file_exists_in_storage,
+    get_or_create_document,
+)
 
 load_dotenv()
 
@@ -33,7 +36,7 @@ oauth.register(
     client_kwargs={
         "scope": "openid email profile",
     },
-)   
+)
 
 Base.metadata.create_all(engine)
 
@@ -49,53 +52,7 @@ app.add_middleware(
 )
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
 
-
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
-
-def file_exists_in_storage(bucket: str, storage_path: str) -> bool:
-    folder = "/".join(storage_path.split("/")[:-1])
-    filename = storage_path.split("/")[-1]
-
-    files = supabase.storage.from_(bucket).list(folder)
-    return any(f["name"] == filename for f in files)
-
-def _get_or_create_document(session: Session, user_id: uuid.UUID, file, pdf_bytes: bytes) -> Document:
-    BUCKET_NAME = os.getenv("BUCKET_NAME")
-    checksum = calculate_checksum(pdf_bytes)
-    doc = get_document_by_checksum(session, user_id, checksum)
-
-    if doc is None:
-        storage_path = f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}"
-
-        # Upload to storage
-        supabase.storage.from_(BUCKET_NAME).upload(
-            path=storage_path,
-            file=pdf_bytes,
-            file_options={"content-type": "application/pdf"},
-        )
-
-        doc = Document(
-            user_id=user_id,
-            filename=file.filename or "uploaded.pdf",
-            storage_path=f"uploads/{user_id}/{file.filename or 'uploaded.pdf'}",
-            checksum_sha256=checksum,
-            status="uploaded",
-        )
-        session.add(doc)
-        session.commit()
-        session.refresh(doc)
-
-    if not file_exists_in_storage(BUCKET_NAME, doc.storage_path):
-        supabase.storage.from_(BUCKET_NAME).upload(
-            path=doc.storage_path,
-            file=pdf_bytes,
-            file_options={"content-type": "application/pdf"},
-        )
-
-    if doc.status != "indexed":
-        IndexingService(session).index_document(doc.id, pdf_bytes)
-
-    return doc
 
 @app.get('/')
 async def root(request: Request):
@@ -175,9 +132,9 @@ async def user_documents(request: Request, id: uuid.UUID):
             raise HTTPException(status_code=404, detail="Document not found")
 
         BUCKET_NAME = os.getenv("BUCKET_NAME")
-        if not file_exists_in_storage(BUCKET_NAME, doc.storage_path):
+        if not file_exists_in_storage(supabase, BUCKET_NAME, doc.storage_path):
             raise HTTPException(status_code=404, detail="File missing from storage")
-        print("file found")
+
         pdf_bytes = supabase.storage.from_(BUCKET_NAME).download(path=doc.storage_path)
         return Response(content=pdf_bytes, media_type="application/pdf")
 
@@ -197,7 +154,7 @@ async def upload_pdf(
     user_id = uuid.UUID(user["id"])
 
     with Session(engine) as session:
-        doc = _get_or_create_document(session, user_id, file, pdf_bytes)
+        doc = get_or_create_document(supabase, session, user_id, file, pdf_bytes)
 
         return {
             "document_id": str(doc.id),
@@ -234,7 +191,7 @@ async def search_pdf(
             pdf_bytes = await file.read()
             if not pdf_bytes:
                 raise HTTPException(status_code=400, detail="Uploaded file is empty")
-            doc = _get_or_create_document(session, user_id, file, pdf_bytes)
+            doc = get_or_create_document(supabase, session, user_id, file, pdf_bytes)
         else:
             raise HTTPException(status_code=400, detail="Provide a document_id or upload a PDF")
 
