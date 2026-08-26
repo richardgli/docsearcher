@@ -5,10 +5,12 @@ import { Search } from "lucide-react";
 type SearchbarProps = {
     value: string;
     onChange: (value: string) => void;
+    onSearch: (value: string) => void;
+    disabled?: boolean;
     theme?: "light" | "dark";
 };
 
-export default function Searchbar({ value, onChange, theme = "light" }: SearchbarProps) {
+export default function Searchbar({ value, onChange, onSearch, disabled = false, theme = "light" }: SearchbarProps) {
     const searchBarRef = useRef<HTMLDivElement>(null);
 
     const handleMouseEnter = () => {
@@ -50,6 +52,14 @@ export default function Searchbar({ value, onChange, theme = "light" }: Searchba
                     autoComplete="off"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            if (!disabled) {
+                                onSearch(value);
+                            }
+                        }
+                    }}
                 />
             </div>
         </>

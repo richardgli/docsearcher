@@ -11,19 +11,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
  
 type DropzoneProps = {
     theme: "light" | "dark";
-    query: string;
-    onPassagesChange: (passages: Passage[]) => void;
+    documentId: string | null;
+    onDocumentChange: (documentId: string | null) => void;
 };
 
-type Passage = {
-    chunk_id: string;
-    page: number;
-    chunk_index: number;
-    score: number;
-    content: string;
-};
-
-export default function Dropzone({ theme, query, onPassagesChange }: DropzoneProps) {
+export default function Dropzone({ theme, documentId, onDocumentChange }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -34,10 +26,57 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
     const [pageScale, setPageScale] = useState(0.75);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const loadedDocumentIdRef = useRef<string | null>(null);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
     const dropzoneBaseColor = theme === "dark" ? "#1b1f27" : "#d5d5d5";
     const dropzoneHoverColor = theme === "dark" ? "#262b37" : "#dfdfdf";
     const BACKEND_URL = import.meta.env.VITE_API_URL;
+
+    useEffect(() => {
+        if (!documentId || documentId === loadedDocumentIdRef.current) return;
+
+        let ignore = false;
+        
+        async function fetchDocument() {
+            setIsUploading(true);
+            setUploadError(null);
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/documents/${documentId}`, {
+                    method: "GET",
+                    credentials: "include",
+                });
+        
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || "Failed to upload PDF.");
+                }
+                console.log(response);
+                const blob = await response.blob();
+                const file = new File([blob], "document.pdf", { type: "application/pdf" });
+
+                if (!ignore) {
+                    setPDF(file);
+                    setCurrentPage(1);
+                    setPageInput("1");
+                    setNumPages(0);
+                    loadedDocumentIdRef.current = documentId;
+                }
+            } catch (error) {
+                if (!ignore) {
+                    setPDF(null);
+                    setUploadError(error instanceof Error ? error.message : "Failed to upload PDF.");
+                }
+            } finally {
+                if (!ignore) setIsUploading(false);
+            }
+        }
+
+        void fetchDocument();
+
+        return () => {
+            ignore = true;
+        };
+    }, [documentId, BACKEND_URL])
 
     useEffect(() => {
         if (!dropZoneRef.current) return;
@@ -51,7 +90,7 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
     }, [PDF, dropzoneBaseColor]);
 
     useEffect(() => {
-        if (!PDF || !dropZoneRef.current || !numPages) return;``
+        if (!PDF || !dropZoneRef.current || !numPages) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -137,26 +176,18 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
             setUploadError("Backend URL is not configured.");
             return;
         }
-
-        if (!query.trim()) {
-            setUploadError("Enter a search query before uploading the PDF.");
-            return;
-        }
         setPDF(file);
         setCurrentPage(1);
         setPageInput("1");
         setNumPages(0);
-        onPassagesChange([]);
         setUploadError(null);
 
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("query", query.trim());
-        formData.append("top_k", "5");
 
         setIsUploading(true);
         try {
-            const response = await fetch(`${BACKEND_URL}/api/search-pdf`, {
+            const response = await fetch(`${BACKEND_URL}/api/upload-pdf`, {
                 method: "POST",
                 credentials: "include",
                 body: formData,
@@ -164,14 +195,16 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
 
             if (!response.ok) {
                 const message = await response.text();
-                throw new Error(message || "Failed to upload and search PDF.");
+                throw new Error(message || "Failed to upload PDF.");
             }
 
             const data = await response.json();
-            const nextPassages = data.passages ?? [];
-            onPassagesChange(nextPassages);
+            loadedDocumentIdRef.current = data.document_id ?? null;
+            onDocumentChange(data.document_id ?? null);
         } catch (error) {
-            setUploadError(error instanceof Error ? error.message : "Failed to upload and search PDF.");
+            setPDF(null);
+            onDocumentChange(null);
+            setUploadError(error instanceof Error ? error.message : "Failed to upload PDF.");
         } finally {
             setIsUploading(false);
         }
@@ -226,7 +259,8 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
         setCurrentPage(1);
         setPageInput("1");
         setPageScale(0.75);
-        onPassagesChange([]);
+        loadedDocumentIdRef.current = null;
+        onDocumentChange(null);
         setUploadError(null);
         if (inputRef.current) {
             inputRef.current.value = "";
@@ -318,7 +352,7 @@ export default function Dropzone({ theme, query, onPassagesChange }: DropzonePro
                     </div>
                     <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
                     <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>
-                    {isUploading && <p className="upload-status">Uploading and searching…</p>}
+                    {isUploading && <p className="upload-status">Uploading PDF…</p>}
                     {uploadError && <p className="upload-error">{uploadError}</p>}
                     {PDF && (
                         <Document file={PDF} onLoadSuccess={({ numPages }) => {
