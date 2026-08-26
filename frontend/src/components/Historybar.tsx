@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Menu } from "lucide-react";
 
-export default function Historybar() {
+type HistorybarProps = {
+    onSelectDocument: (id: string | null) => void;
+}
+
+export default function Historybar({ onSelectDocument }: HistorybarProps) {
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const sidebarContentRef = useRef<HTMLDivElement>(null);
     const [isOpen, setIsOpen] = useState(false);
@@ -88,8 +92,9 @@ export default function Historybar() {
         setIsOpen(!isOpen);
     };
 
-    const handleHistoryItemClick = (item: string) => {
-        console.log("Clicked:", item);
+    const handleHistoryItemClick = (id: string) => {
+        onSelectDocument(id);
+
         gsap.to(sidebarContentRef.current, {
             x: -sidebarWidth,
             duration: 0.25,
@@ -183,7 +188,7 @@ export default function Historybar() {
                             )}
                             {documents.map((doc) => (
                                 <li key={doc.id}>
-                                    <button onClick={() => handleHistoryItemClick(doc.filename)}>
+                                    <button onClick={() => handleHistoryItemClick(doc.id)}>
                                         <span>{doc.filename}</span>
                                         <small>
                                             {new Date(doc.created_at).toLocaleString()}

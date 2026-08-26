@@ -28,6 +28,20 @@ def get_document_by_checksum(
     )
 
 
+def get_document_by_id(
+    db: Session,
+    id: uuid.UUID,
+) -> Document | None:
+    return (
+        db.query(Document)
+        .filter(
+            Document.id == id,
+        )
+        .order_by(Document.created_at.desc())
+        .first()
+    )
+
+
 def list_documents_for_user(
     db: Session,
     user_id: uuid.UUID,

@@ -13,3 +13,4 @@ python-multipart
 pymupdf
 openai
 tiktoken
+supabase

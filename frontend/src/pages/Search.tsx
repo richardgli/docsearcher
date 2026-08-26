@@ -197,9 +197,15 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         window.location.href = `${BACKEND_URL}/api/logout`;
     };
 
+    const handleDocumentSelect = (nextDocumentId: string | null) => {
+        setDocumentId(nextDocumentId);
+        setPassages([]);
+        setSearchError(null);
+    }
+
     return (
         <>
-            <Historybar />
+            <Historybar onSelectDocument={handleDocumentSelect} />
             <button
                 id="theme-toggle-button"
                 type="button"
@@ -294,11 +300,8 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                 </div>
                 <Dropzone
                     theme={theme}
-                    onDocumentChange={(nextDocumentId) => {
-                        setDocumentId(nextDocumentId);
-                        setPassages([]);
-                        setSearchError(null);
-                    }}
+                    documentId={documentId}
+                    onDocumentChange={handleDocumentSelect}
                 />
             </div>
         </>
