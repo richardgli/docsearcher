@@ -514,6 +514,16 @@ body {
     color: transparent;
 }
 
+.search-error {
+    max-width: 40vw;
+    margin: 0.75rem auto 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    text-align: center;
+}
+
 #title {
     font-size: clamp(8px, 5vw, 320px);
 }
@@ -557,6 +567,10 @@ body {
     background: var(--overlay-color);
     z-index: 14;
     transition: background-color 0.35s ease;
+}
+
+.sidebar-overlay ~ .profile-menu-anchor {
+    z-index: 13;
 }
 
 #sidebar {
@@ -637,6 +651,20 @@ body {
     bottom: 0;
     width: 10px;
     background: var(--search-gradient);
+}
+
+/* Stack filename and date on separate lines inside history list items */
+.history-list li button > span {
+    display: block;
+    font-weight: 600;
+}
+
+.history-list li button > small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    opacity: 0.8;
+    color: var(--page-text);
 }
 
 .sidebar-content p {

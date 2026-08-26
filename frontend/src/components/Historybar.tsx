@@ -1,18 +1,66 @@
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { Menu } from "lucide-react";
 
-export default function Historybar() {
+type HistorybarProps = {
+    onSelectDocument: (id: string | null) => void;
+}
+
+export default function Historybar({ onSelectDocument }: HistorybarProps) {
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const sidebarContentRef = useRef<HTMLDivElement>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [documents, setDocuments] = useState<
+        Array<{
+            id: string;
+            filename: string;
+            created_at: string;
+            status: string;
+        }>
+    >([]);
+    const [isLoading, setIsLoading] = useState(false);
     const sidebarWidth = 250;
     const popoutDistance = 30;
+    const BACKEND_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         if (!sidebarContentRef.current) return;
         gsap.set(sidebarContentRef.current, { x: -sidebarWidth });
     }, []);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const controller = new AbortController();
+
+        setIsLoading(true);
+        fetch(`${BACKEND_URL}/api/documents`, {
+            credentials: "include",
+            signal: controller.signal,
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    return null;
+                }
+
+                return response.json();
+            })
+            .then((payload) => {
+                setDocuments(payload?.documents ?? []);
+            })
+            .catch((error) => {
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    return;
+                }
+
+                setDocuments([]);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+
+        return () => controller.abort();
+    }, [BACKEND_URL, isOpen]);
     
     const handleMenuClick = () => {
         if (!menuButtonRef.current) return;
@@ -44,8 +92,9 @@ export default function Historybar() {
         setIsOpen(!isOpen);
     };
 
-    const handleHistoryItemClick = (item: string) => {
-        console.log("Clicked:", item);
+    const handleHistoryItemClick = (id: string) => {
+        onSelectDocument(id);
+
         gsap.to(sidebarContentRef.current, {
             x: -sidebarWidth,
             duration: 0.25,
@@ -131,98 +180,24 @@ export default function Historybar() {
             >
                 <div className="sidebar-content" id={isOpen ? "" : "pointer"}>
                     <p>Recent docs</p>
-                    {isOpen && (<ul className="history-list">
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 1")}>
-                                Document 1
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 2")}>
-                                Document 2
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 3
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 4
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 5
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 6
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 7
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 8
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 9
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 10
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 11
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 12
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 13
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 14
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 15
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 16
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 17
-                            </button>
-                        </li>
-                        <li>
-                            <button onClick={() => handleHistoryItemClick("Search 3")}>
-                                Document 18
-                            </button>
-                        </li>
-                    </ul>)}
+                    {isOpen && (
+                        <ul className="history-list">
+                            {isLoading && <li className="history-empty">Loading documents...</li>}
+                            {!isLoading && documents.length === 0 && (
+                                <li className="history-empty">No documents yet.</li>
+                            )}
+                            {documents.map((doc) => (
+                                <li key={doc.id}>
+                                    <button onClick={() => handleHistoryItemClick(doc.id)}>
+                                        <span>{doc.filename}</span>
+                                        <small>
+                                            {new Date(doc.created_at).toLocaleString()}
+                                        </small>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             </div>
         </>

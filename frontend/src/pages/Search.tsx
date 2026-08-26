@@ -30,6 +30,8 @@ function Search({ theme, onToggleTheme }: SearchProps) {
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [passages, setPassages] = useState<Passage[]>([]);
+    const [documentId, setDocumentId] = useState<string | null>(null);
+    const [searchError, setSearchError] = useState<string | null>(null);
     const logButtonRef = useRef<HTMLButtonElement>(null);
     const profileMenuRef = useRef<HTMLDivElement>(null);
     const titleParagraphRef = useRef<HTMLParagraphElement>(null);
@@ -118,6 +120,45 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         }
     }, [loggedIn]);
 
+    const handleSearch = async (nextQuery: string) => {
+        const trimmedQuery = nextQuery.trim();
+        if (!trimmedQuery) {
+            setSearchError("Enter a search prompt first.");
+            return;
+        }
+
+        if (!documentId) {
+            setSearchError("Upload a PDF before searching.");
+            return;
+        }
+
+        if (!BACKEND_URL) {
+            setSearchError("Backend URL is not configured.");
+            return;
+        }
+
+        setSearchError(null);
+
+        const formData = new FormData();
+        formData.append("document_id", documentId);
+        formData.append("query", trimmedQuery);
+        formData.append("top_k", "5");
+
+        const response = await fetch(`${BACKEND_URL}/api/search-pdf`, {
+            method: "POST",
+            credentials: "include",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const message = await response.text();
+            throw new Error(message || "Failed to search PDF.");
+        }
+
+        const data = await response.json();
+        setPassages(data.passages ?? []);
+    };
+
     const handleMouseEnter = () => {
         if (!logButtonRef.current) return;
 
@@ -156,9 +197,15 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         window.location.href = `${BACKEND_URL}/api/logout`;
     };
 
+    const handleDocumentSelect = (nextDocumentId: string | null) => {
+        setDocumentId(nextDocumentId);
+        setPassages([]);
+        setSearchError(null);
+    }
+
     return (
         <>
-            <Historybar />
+            <Historybar onSelectDocument={handleDocumentSelect} />
             <button
                 id="theme-toggle-button"
                 type="button"
@@ -215,7 +262,18 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                         </p>
                     )}
                     <div ref={searchBarRef}>
-                        <Searchbar value={query} onChange={setQuery} theme={theme} />
+                        <Searchbar
+                            value={query}
+                            onChange={setQuery}
+                            onSearch={(value) => {
+                                void handleSearch(value).catch((error) => {
+                                    setSearchError(error instanceof Error ? error.message : "Failed to search PDF.");
+                                });
+                            }}
+                            disabled={!documentId}
+                            theme={theme}
+                        />
+                        {searchError && <p className="search-error">{searchError}</p>}
                         {passages.length > 0 && (
                             <div className="passage-results passage-results--search">
                                 <h3>Relevant passages</h3>
@@ -240,7 +298,11 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                         </p>
                     )}
                 </div>
-                <Dropzone theme={theme} query={query} onPassagesChange={setPassages} />
+                <Dropzone
+                    theme={theme}
+                    documentId={documentId}
+                    onDocumentChange={handleDocumentSelect}
+                />
             </div>
         </>
     )

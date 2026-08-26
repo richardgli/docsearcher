@@ -8,8 +8,8 @@ psycopg2-binary
 itsdangerous
 httpx
 pgvector
-fitz
 python-multipart
 pymupdf
 openai
 tiktoken
+supabase
