@@ -95,7 +95,6 @@ async def me(request: Request):
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user
 
-
 @app.get('/api/documents')
 async def documents(request: Request):
     user = request.session.get("user")
@@ -119,7 +118,6 @@ async def documents(request: Request):
             ]
         }
 
-
 @app.get('/api/documents/{id}')
 async def user_documents(request: Request, id: uuid.UUID):
     user = request.session.get("user")
@@ -127,8 +125,8 @@ async def user_documents(request: Request, id: uuid.UUID):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     with Session(engine) as session:
-        doc = get_document_by_id(session, id)
-        if doc is None or doc.user_id != uuid.UUID(user["id"]):
+        doc = get_document_by_id(session, id, user["id"])
+        if doc is None:
             raise HTTPException(status_code=404, detail="Document not found")
 
         BUCKET_NAME = os.getenv("BUCKET_NAME")
@@ -161,7 +159,6 @@ async def upload_pdf(
             "filename": doc.filename,
             "status": doc.status,
         }
-
 
 @app.post('/api/search-pdf')
 async def search_pdf(

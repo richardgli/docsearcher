@@ -3,8 +3,9 @@ from __future__ import annotations
 import os
 import uuid
 from sqlalchemy.orm import Session
+
 from supabase import Client
-from backend.app.models.document import Document
+from backend.app.models import Document, Chunk
 from backend.app.services.indexing import IndexingService
 from backend.app.services.documents import (
     calculate_checksum,
