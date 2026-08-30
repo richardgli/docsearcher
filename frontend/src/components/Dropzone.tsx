@@ -26,7 +26,6 @@ export default function Dropzone({ theme, documentId, selectedPage, selectedChun
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState("1");
     const [pageScale, setPageScale] = useState(0.75);
-    const [pageSizes, setPageSizes] = useState<Record<number, { width: number; height: number }>>({});
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [pageViewports, setPageViewports] = useState<Record<number, any>>({});
@@ -269,7 +268,6 @@ export default function Dropzone({ theme, documentId, selectedPage, selectedChun
         setCurrentPage(1);
         setPageInput("1");
         setPageScale(0.75);
-        setPageSizes({});
         loadedDocumentIdRef.current = null;
         onDocumentChange(null);
         setUploadError(null);
