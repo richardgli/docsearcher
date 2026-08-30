@@ -1,5 +1,7 @@
 import os
 import uuid
+from typing import Any
+
 from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -24,6 +26,9 @@ from backend.app.utils.route_helpers import (
     file_exists_in_storage,
     get_or_create_document,
     delete_document,
+    get_guest_document, 
+    write_guest_document,
+    search_guest_document,
 )
 
 load_dotenv()
@@ -54,6 +59,8 @@ app.add_middleware(
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY"))
 
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+GUEST_DOCUMENTS: dict[str, dict[str, Any]] = {}
+
 
 @app.get('/')
 async def root(request: Request):
@@ -100,7 +107,7 @@ async def me(request: Request):
 async def documents(request: Request):
     user = request.session.get("user")
     if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return {"documents": []}
 
     user_id = uuid.UUID(user["id"])
 
@@ -122,20 +129,23 @@ async def documents(request: Request):
 @app.get('/api/documents/{id}')
 async def user_documents(request: Request, id: uuid.UUID):
     user = request.session.get("user")
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user:
+        with Session(engine) as session:
+            doc = get_document_by_id(session, id, user["id"])
+            if doc is None:
+                raise HTTPException(status_code=404, detail="Document not found")
 
-    with Session(engine) as session:
-        doc = get_document_by_id(session, id, user["id"])
-        if doc is None:
-            raise HTTPException(status_code=404, detail="Document not found")
+            BUCKET_NAME = os.getenv("BUCKET_NAME")
+            if not file_exists_in_storage(supabase, BUCKET_NAME, doc.storage_path):
+                raise HTTPException(status_code=404, detail="File missing from storage")
 
-        BUCKET_NAME = os.getenv("BUCKET_NAME")
-        if not file_exists_in_storage(supabase, BUCKET_NAME, doc.storage_path):
-            raise HTTPException(status_code=404, detail="File missing from storage")
+            pdf_bytes = supabase.storage.from_(BUCKET_NAME).download(path=doc.storage_path)
+            return Response(content=pdf_bytes, media_type="application/pdf")
 
-        pdf_bytes = supabase.storage.from_(BUCKET_NAME).download(path=doc.storage_path)
-        return Response(content=pdf_bytes, media_type="application/pdf")
+    guest_doc = get_guest_document(GUEST_DOCUMENTS, request, id)
+    if guest_doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return Response(content=guest_doc["bytes"], media_type="application/pdf")
 
 @app.delete('/api/documents/{id}')
 async def delete_user_document(request: Request, id: uuid.UUID):
@@ -158,13 +168,18 @@ async def upload_pdf(
     request: Request,
     file: UploadFile = File(...),
 ):
-    user = request.session.get("user")
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
     pdf_bytes = await file.read()
     if not pdf_bytes:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+    user = request.session.get("user")
+    if not user:
+        guest_doc = write_guest_document(GUEST_DOCUMENTS, request, file, pdf_bytes)
+        return {
+            "document_id": guest_doc["id"],
+            "filename": guest_doc["filename"],
+            "status": "guest",
+        }
 
     user_id = uuid.UUID(user["id"])
 
@@ -186,49 +201,70 @@ async def search_pdf(
     top_k: int = Form(5),
 ):
     user = request.session.get("user")
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user:
+        user_id = uuid.UUID(user["id"])
 
-    user_id = uuid.UUID(user["id"])
+        with Session(engine) as session:
+            if document_id:
+                try:
+                    document_uuid = uuid.UUID(document_id)
+                except ValueError as exc:
+                    raise HTTPException(status_code=400, detail="Invalid document_id") from exc
 
-    with Session(engine) as session:
-        if document_id:
-            try:
-                document_uuid = uuid.UUID(document_id)
-            except ValueError as exc:
-                raise HTTPException(status_code=400, detail="Invalid document_id") from exc
+                doc = session.get(Document, document_uuid)
+                if doc is None or doc.user_id != user_id:
+                    raise HTTPException(status_code=404, detail="Document not found")
+            elif file is not None:
+                pdf_bytes = await file.read()
+                if not pdf_bytes:
+                    raise HTTPException(status_code=400, detail="Uploaded file is empty")
+                doc = get_or_create_document(supabase, session, user_id, file, pdf_bytes)
+            else:
+                raise HTTPException(status_code=400, detail="Provide a document_id or upload a PDF")
 
-            doc = session.get(Document, document_uuid)
-            if doc is None or doc.user_id != user_id:
-                raise HTTPException(status_code=404, detail="Document not found")
-        elif file is not None:
-            pdf_bytes = await file.read()
-            if not pdf_bytes:
-                raise HTTPException(status_code=400, detail="Uploaded file is empty")
-            doc = get_or_create_document(supabase, session, user_id, file, pdf_bytes)
-        else:
-            raise HTTPException(status_code=400, detail="Provide a document_id or upload a PDF")
+            results = SearchService(session).search(
+                query=query,
+                user_id=user_id,
+                document_id=doc.id,
+                top_k=top_k,
+            )
 
-        results = SearchService(session).search(
-            query=query,
-            user_id=user_id,
-            document_id=doc.id,
-            top_k=top_k,
-        )
+            return {
+                "document_id": str(doc.id),
+                "filename": doc.filename,
+                "query": query,
+                "passages": [
+                    {
+                        "chunk_id": str(result.chunk_id),
+                        "page": result.page,
+                        "chunk_index": result.chunk_index,
+                        "score": result.score,
+                        "content": result.content,
+                        "bbox": list(result.bbox) if result.bbox else None,
+                    }
+                    for result in results
+                ],
+            }
 
-        return {
-            "document_id": str(doc.id),
-            "filename": doc.filename,
-            "query": query,
-            "passages": [
-                {
-                    "chunk_id": str(result.chunk_id),
-                    "page": result.page,
-                    "chunk_index": result.chunk_index,
-                    "score": result.score,
-                    "content": result.content,
-                    "bbox": list(result.bbox) if result.bbox else None,
-                }
-                for result in results
-            ],
-        }
+    if document_id:
+        guest_doc = get_guest_document(GUEST_DOCUMENTS, request, document_id)
+        if guest_doc is None:
+            raise HTTPException(status_code=404, detail="Document not found")
+        pdf_bytes = guest_doc["bytes"]
+        filename = guest_doc["filename"]
+    elif file is not None:
+        pdf_bytes = await file.read()
+        if not pdf_bytes:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+        guest_doc = write_guest_document(GUEST_DOCUMENTS, request, file, pdf_bytes)
+        filename = guest_doc["filename"]
+    else:
+        raise HTTPException(status_code=400, detail="Provide a document_id or upload a PDF")
+
+    passages = search_guest_document(pdf_bytes, query, top_k)
+    return {
+        "document_id": str(guest_doc["id"]),
+        "filename": filename,
+        "query": query,
+        "passages": passages,
+    }
