@@ -201,6 +201,8 @@ function Search({ theme, onToggleTheme }: SearchProps) {
 
     const handleDocumentSelect = (nextDocumentId: string | null) => {
         setDocumentId(nextDocumentId);
+        setSelectedPage(null);
+        setSelectedChunkBBox(null);
         setPassages([]);
         setSearchError(null);
     }
