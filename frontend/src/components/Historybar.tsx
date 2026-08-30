@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { Menu } from "lucide-react";
+import { Menu, Trash2 } from "lucide-react";
 
 type HistorybarProps = {
     onSelectDocument: (id: string | null) => void;
@@ -109,6 +109,22 @@ export default function Historybar({ onSelectDocument }: HistorybarProps) {
         setIsOpen(false);
     };
 
+    const handleDeleteDocument = async (id: string) => {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/documents/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            })
+
+            if (!response.ok) {
+                const message = await response.text();
+                throw new Error(message || "Failed to delete PDF.");
+            }
+        } catch (error) {
+            throw new Error("Failed to delete PDF.");
+        }
+    }
+
     const handleClickOutside = (e: React.MouseEvent) => {
         if (sidebarContentRef.current && !sidebarContentRef.current.contains(e.target as Node)) {
             gsap.to(sidebarContentRef.current, {
@@ -124,7 +140,7 @@ export default function Historybar({ onSelectDocument }: HistorybarProps) {
             setIsOpen(false);
         }
     };
-    
+
     const handleMouseEnter = () => {
         if (!menuButtonRef.current || isOpen) return;
         
@@ -194,6 +210,12 @@ export default function Historybar({ onSelectDocument }: HistorybarProps) {
                                             {new Date(doc.created_at).toLocaleString()}
                                         </small>
                                     </button>
+                                    <Trash2
+                                        size={20}
+                                        strokeWidth={1.5}
+                                        style={{cursor: "pointer"}}
+                                        onClick={() => handleDeleteDocument(doc.id)}
+                                    />
                                 </li>
                             ))}
                         </ul>

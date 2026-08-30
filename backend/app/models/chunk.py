@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
-    ForeignKey, Index, Integer, Text, DateTime, 
+    ForeignKey, Index, Integer, Text, DateTime, Float,
     UniqueConstraint, String,
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -33,6 +33,10 @@ class Chunk(Base):
     page: Mapped[int] = mapped_column(Integer, nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    bbox_x0: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bbox_y0: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bbox_x1: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bbox_y1: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # pgvector column — stored as vector(1536)
     embedding: Mapped[list[float]] = mapped_column(

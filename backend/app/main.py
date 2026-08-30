@@ -23,6 +23,7 @@ from backend.app.services.user import UserService
 from backend.app.utils.route_helpers import (
     file_exists_in_storage,
     get_or_create_document,
+    delete_document,
 )
 
 load_dotenv()
@@ -136,6 +137,22 @@ async def user_documents(request: Request, id: uuid.UUID):
         pdf_bytes = supabase.storage.from_(BUCKET_NAME).download(path=doc.storage_path)
         return Response(content=pdf_bytes, media_type="application/pdf")
 
+@app.delete('/api/documents/{id}')
+async def delete_user_document(request: Request, id: uuid.UUID):
+    user = request.session.get("user")
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    with Session(engine) as session:
+        try:
+            delete_document(supabase, session, uuid.UUID(user["id"]), id)
+        except ValueError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+        return {"deleted": True, "document_id": str(id)}
+
 @app.post('/api/upload-pdf')
 async def upload_pdf(
     request: Request,
@@ -210,6 +227,7 @@ async def search_pdf(
                     "chunk_index": result.chunk_index,
                     "score": result.score,
                     "content": result.content,
+                    "bbox": list(result.bbox) if result.bbox else None,
                 }
                 for result in results
             ],

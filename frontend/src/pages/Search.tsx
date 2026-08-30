@@ -11,6 +11,7 @@ type Passage = {
     chunk_index: number;
     score: number;
     content: string;
+    bbox?: [number, number, number, number] | null;
 };
 
 type SearchProps = {
@@ -33,6 +34,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
     const [documentId, setDocumentId] = useState<string | null>(null);
     const [searchError, setSearchError] = useState<string | null>(null);
     const [selectedPage, setSelectedPage] = useState<number |null>(null);
+    const [selectedChunkBBox, setSelectedChunkBBox] = useState<[number, number, number, number] | null>(null);
     const logButtonRef = useRef<HTMLButtonElement>(null);
     const profileMenuRef = useRef<HTMLDivElement>(null);
     const titleParagraphRef = useRef<HTMLParagraphElement>(null);
@@ -203,8 +205,9 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         setSearchError(null);
     }
 
-    const handlePassageClick = (page: number) => {
+    const handlePassageClick = (page: number, bbox?: [number, number, number, number] | null) => {
         setSelectedPage(page);
+        setSelectedChunkBBox(bbox ?? null);
     }
 
     return (
@@ -285,7 +288,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                                     {passages.map((passage) => (
                                         <li
                                             key={passage.chunk_id}
-                                            onClick={() => handlePassageClick(passage.page)}
+                                            onClick={() => handlePassageClick(passage.page, passage.bbox ?? null)}
                                             style={{cursor: "pointer"}}
                                         >
                                             <div className="passage-meta">
@@ -310,6 +313,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                     theme={theme}
                     documentId={documentId}
                     selectedPage={selectedPage}
+                    selectedChunkBBox={selectedChunkBBox}
                     onDocumentChange={handleDocumentSelect}
                 />
             </div>

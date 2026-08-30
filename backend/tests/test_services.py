@@ -117,6 +117,7 @@ def test_index_document_stores_chunks(db, sample_user_and_doc):
     assert len(chunks) > 0
     assert all(c.embedding is not None for c in chunks)
     assert all(len(c.embedding) == 1536 for c in chunks)
+    assert all(c.bbox_x0 is not None for c in chunks)
 
 def test_reindex_replaces_chunks(db, sample_user_and_doc):
     user, doc = sample_user_and_doc
@@ -147,6 +148,7 @@ def test_search_returns_results(db, sample_user_and_doc):
     results = SearchService(db).search(query="fox", user_id=user.id)
     assert len(results) > 0
     assert all(0.0 <= r.score <= 1.0 for r in results)
+    assert all(r.bbox is not None for r in results)
     assert results == sorted(results, key=lambda r: r.score, reverse=True)
 
 

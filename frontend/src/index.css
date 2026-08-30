@@ -289,6 +289,7 @@ body {
     user-select: text;
     cursor: default;
     margin-bottom: 1rem;
+    position: relative;
 }
 
 .pdf-pages {
@@ -678,4 +679,18 @@ body {
 
 #page-jump-input {
     appearance: textfield;
+}
+
+.pdf-page-inner {
+    position: relative;
+    display: inline-block;
+}
+
+.pdf-chunk-highlight {
+    position: absolute;
+    border: 3px solid rgba(255, 86, 86, 0.95);
+    background: rgba(255, 86, 86, 0.22);
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+    pointer-events: none;
 }

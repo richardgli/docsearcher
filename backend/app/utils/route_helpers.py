@@ -47,7 +47,7 @@ def get_or_create_document(client: Client, session: Session, user_id: uuid.UUID,
         session.commit()
         session.refresh(doc)
 
-    if not file_exists_in_storage(BUCKET_NAME, doc.storage_path):
+    if not file_exists_in_storage(client, BUCKET_NAME, doc.storage_path):
         client.storage.from_(BUCKET_NAME).upload(
             path=doc.storage_path,
             file=pdf_bytes,
@@ -58,3 +58,39 @@ def get_or_create_document(client: Client, session: Session, user_id: uuid.UUID,
         IndexingService(session).index_document(doc.id, pdf_bytes)
 
     return doc
+
+
+def delete_document(client: Client, session: Session, user_id: uuid.UUID, document_id: uuid.UUID) -> None:
+    BUCKET_NAME = os.getenv("BUCKET_NAME")
+    doc = (
+        session.query(Document)
+        .filter(
+            Document.id == document_id,
+            Document.user_id == user_id)
+        .first()
+    )
+    if doc is None:
+        raise ValueError("Document not found")
+
+    storage_path = doc.storage_path
+
+    try:
+        # Removes document chunks in chunks table
+        session.query(Chunk).filter(
+            Chunk.document_id == document_id,
+            Chunk.user_id == user_id,
+        ).delete(synchronize_session=False)
+
+        # Removes document record in documents table
+        session.query(Document).filter(
+            Document.id == document_id,
+            Document.user_id == user_id,
+        ).delete(synchronize_session=False)
+
+        # Removes PDF from Supabase storage
+        client.storage.from_(BUCKET_NAME).remove([storage_path])
+
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise

@@ -13,10 +13,11 @@ type DropzoneProps = {
     theme: "light" | "dark";
     documentId: string | null;
     selectedPage: number | null;
+    selectedChunkBBox: [number, number, number, number] | null;
     onDocumentChange: (documentId: string | null) => void;
 };
 
-export default function Dropzone({ theme, documentId, selectedPage, onDocumentChange }: DropzoneProps) {
+export default function Dropzone({ theme, documentId, selectedPage, selectedChunkBBox, onDocumentChange }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -25,8 +26,10 @@ export default function Dropzone({ theme, documentId, selectedPage, onDocumentCh
     const [currentPage, setCurrentPage] = useState(1);
     const [pageInput, setPageInput] = useState("1");
     const [pageScale, setPageScale] = useState(0.75);
+    const [pageSizes, setPageSizes] = useState<Record<number, { width: number; height: number }>>({});
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [pageViewports, setPageViewports] = useState<Record<number, any>>({});
     const loadedDocumentIdRef = useRef<string | null>(null);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
     const dropzoneBaseColor = theme === "dark" ? "#1b1f27" : "#d5d5d5";
@@ -57,7 +60,7 @@ export default function Dropzone({ theme, documentId, selectedPage, onDocumentCh
                     const message = await response.text();
                     throw new Error(message || "Failed to upload PDF.");
                 }
-                console.log(response);
+
                 const blob = await response.blob();
                 const file = new File([blob], "document.pdf", { type: "application/pdf" });
 
@@ -266,6 +269,7 @@ export default function Dropzone({ theme, documentId, selectedPage, onDocumentCh
         setCurrentPage(1);
         setPageInput("1");
         setPageScale(0.75);
+        setPageSizes({});
         loadedDocumentIdRef.current = null;
         onDocumentChange(null);
         setUploadError(null);
@@ -273,6 +277,49 @@ export default function Dropzone({ theme, documentId, selectedPage, onDocumentCh
             inputRef.current.value = "";
         }
     };
+
+    function BBoxHighlight({
+        bbox,
+        viewport,
+    }: {
+        bbox: [number, number, number, number];
+        viewport: any;
+    }) {
+        if (!viewport) return null;
+
+        const [x0, y0, x1, y1] = bbox;
+
+        // Converting PyMuPDF coordinates to convertToViewportRectangle coordinates
+        const pageHeightPts = viewport.height / viewport.scale;
+        const flipped: [number, number, number, number] = [
+            x0,
+            pageHeightPts - y1,
+            x1,
+            pageHeightPts - y0,
+        ];
+
+        const [vx0, vy0, vx1, vy1] = viewport.convertToViewportRectangle(flipped);
+        const left = Math.min(vx0, vx1);
+        const top = Math.min(vy0, vy1);
+        const width = Math.abs(vx1 - vx0);
+        const height = Math.abs(vy1 - vy0);
+
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    left,
+                    top,
+                    width,
+                    height,
+                    backgroundColor: "rgba(255, 214, 0, 0.35)",
+                    border: "1.5px solid rgba(255, 179, 0, 0.8)",
+                    borderRadius: 2,
+                    pointerEvents: "none",
+                }}
+            />
+        );
+    }
 
     return (
         <>
@@ -368,17 +415,33 @@ export default function Dropzone({ theme, documentId, selectedPage, onDocumentCh
                             setPageInput("1");
                         }}>
                             <div className="pdf-pages">
-                                {Array.from({ length: numPages }, (_, index) => (
-                                    <div
-                                        key={`pdf-page-${index + 1}`}
-                                        className="pdf-page-wrapper"
-                                        ref={(element) => {
-                                            pageRefs.current[index] = element;
-                                        }}
-                                    >
-                                        <Page pageNumber={index + 1} scale={pageScale} />
-                                    </div>
-                                ))}
+                                {Array.from({ length: numPages }, (_, index) => {
+                                    const pageNumber = index + 1;
+                                    return (
+                                        <div
+                                            key={`pdf-page-${pageNumber}`}
+                                            className="pdf-page-wrapper"
+                                            ref={(element) => {
+                                                pageRefs.current[index] = element;
+                                            }}
+                                        >
+                                            <Page
+                                                pageNumber={pageNumber}
+                                                scale={pageScale}
+                                                onLoadSuccess={(page) => {
+                                                    const viewport = page.getViewport({ scale: pageScale });
+                                                    setPageViewports((prev) => ({ ...prev, [pageNumber]: viewport }));
+                                                }}
+                                            />
+                                            {selectedPage === pageNumber && selectedChunkBBox && (
+                                                <BBoxHighlight
+                                                    bbox={selectedChunkBBox}
+                                                    viewport={pageViewports[pageNumber]}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </Document>
                     )}
