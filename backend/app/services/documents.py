@@ -30,14 +30,15 @@ def get_document_by_checksum(
 
 def get_document_by_id(
     db: Session,
-    id: uuid.UUID,
+    document_id: uuid.UUID,
+    user_id: uuid.UUID,
 ) -> Document | None:
     return (
         db.query(Document)
         .filter(
-            Document.id == id,
+            Document.id == document_id,
+            Document.user_id == user_id,
         )
-        .order_by(Document.created_at.desc())
         .first()
     )
 

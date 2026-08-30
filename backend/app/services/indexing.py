@@ -40,22 +40,57 @@ class RawChunk:
     page: int          # 1-indexed
     chunk_index: int   # 0-indexed within page
     content: str
+    bbox: tuple[float, float, float, float] | None = None   # chunk bounding box
 
 
-def _split_page(text: str, page: int) -> list[RawChunk]:
-    """Split one page of text into overlapping token-bounded chunks."""
-    tokens = _enc.encode(text)
+def _split_page(page_obj, page: int) -> list[RawChunk]:
+    """Split one page into overlapping token-bounded chunks, tracking bounding boxes via word-level extraction."""
+    words = page_obj.get_text("words")  # (x0, y0, x1, y1, word, block, line, word_no)
+    if not words:
+        return []
+
+    # token boundaries between words
+    tokens = [len(_enc.encode(" " + w[4])) for w in words]
     chunks: list[RawChunk] = []
     start = 0
     idx = 0
-    while start < len(tokens):
-        end = min(start + CHUNK_TOKENS, len(tokens))
-        chunk_text = _enc.decode(tokens[start:end]).strip()
+
+    while start < len(words):
+        end = start
+        token_count = 0
+        while end < len(words) and token_count + tokens[end] <= CHUNK_TOKENS:
+            token_count += tokens[end]
+            end += 1
+        if end == start:
+            end = start + 1
+
+        window = words[start:end]
+        chunk_text = " ".join(w[4] for w in window).strip()
         if chunk_text:
-            chunks.append(RawChunk(page=page, chunk_index=idx, content=chunk_text))
+            chunks.append(RawChunk(page=page, chunk_index=idx, content=chunk_text, bbox=_union_bbox(window)))
             idx += 1
-        start += CHUNK_TOKENS - OVERLAP_TOKENS
+
+        if end >= len(words):
+            break   # reached end of page
+
+        overlap_words = 0
+        overlap_token = 0
+        i = end - 1
+        while i >= start and overlap_token < OVERLAP_TOKENS:
+            overlap_token += tokens[i]
+            overlap_words += 1
+            i -= 1
+        start = max(end - overlap_words, start + 1)
     return chunks
+
+
+def _union_bbox(window: list) -> tuple[float, float, float, float]:
+    """Bounding box that encloses all words in the chunk."""
+    x0 = min(w[0] for w in window)
+    y0 = min(w[1] for w in window)
+    x1 = max(w[2] for w in window)
+    y1 = max(w[3] for w in window)
+    return (x0, y0, x1, y1)
 
 
 def extract_chunks(pdf_bytes: bytes) -> list[RawChunk]:
@@ -65,7 +100,7 @@ def extract_chunks(pdf_bytes: bytes) -> list[RawChunk]:
         for page_num, page in enumerate(doc, start=1):
             text = page.get_text()
             if text.strip():
-                all_chunks.extend(_split_page(text, page=page_num))
+                all_chunks.extend(_split_page(page, page=page_num))
     return all_chunks
 
 
@@ -128,6 +163,10 @@ class IndexingService:
                     page=rc.page,
                     chunk_index=rc.chunk_index,
                     content=rc.content,
+                    bbox_x0=rc.bbox[0] if rc.bbox else None,
+                    bbox_y0=rc.bbox[1] if rc.bbox else None,
+                    bbox_x1=rc.bbox[2] if rc.bbox else None,
+                    bbox_y1=rc.bbox[3] if rc.bbox else None,
                     embedding=vec,
                 )
                 for rc, vec in zip(raw_chunks, vectors)

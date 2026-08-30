@@ -31,6 +31,7 @@ class SearchResult:
     chunk_index: int
     content: str
     score: float   # cosine similarity: 1 = identical, 0 = orthogonal
+    bbox: tuple[float, float, float, float] | None = None
 
 
 def _embed_query(query: str) -> list[float]:
@@ -87,6 +88,10 @@ class SearchService:
                 chunk_index=chunk.chunk_index,
                 content=chunk.content,
                 score=round(1.0 - float(dist), 4),
+                bbox=(
+                    (chunk.bbox_x0, chunk.bbox_y0, chunk.bbox_x1, chunk.bbox_y1)
+                    if chunk.bbox_x0 is not None else None
+                ),
             )
             for chunk, dist in rows
         ]
