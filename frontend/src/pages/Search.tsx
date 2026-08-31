@@ -227,6 +227,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
             <div className="profile-menu-anchor" ref={profileMenuRef}>
                 <button
                     id="login-button"
+                    className="login-button"
                     type="button"
                     ref={logButtonRef}
                     onMouseEnter={handleMouseEnter}
