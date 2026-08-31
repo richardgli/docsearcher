@@ -52,7 +52,18 @@ export default function Dropzone({ theme, documentId, loggedIn, selectedPage, se
     }, [selectedPage, numPages]);
 
     useEffect(() => {
-        if (!documentId || documentId === loadedDocumentIdRef.current) return;
+        if (!documentId) {
+            setPDF(null);
+            setNumPages(0);
+            setCurrentPage(1);
+            setPageInput("1");
+            setPageScale(0.75);
+            setUploadError(null);
+            loadedDocumentIdRef.current = null;
+            return;
+        }
+
+        if (documentId === loadedDocumentIdRef.current) return;
 
         let ignore = false;
         

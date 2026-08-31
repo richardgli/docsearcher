@@ -145,6 +145,10 @@ export default function Historybar({ onSelectDocument, selectedDocumentId }: His
                 throw new Error(message || "Failed to delete PDF.");
             }
 
+            if (id === selectedDocumentId) {
+                onSelectDocument(null);
+            }
+
             await refreshDocuments();
         } catch (error) {
             throw new Error("Failed to delete PDF.");
