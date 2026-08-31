@@ -214,7 +214,10 @@ function Search({ theme, onToggleTheme }: SearchProps) {
 
     return (
         <>
-            <Historybar onSelectDocument={handleDocumentSelect} />
+            <Historybar
+                onSelectDocument={handleDocumentSelect}
+                selectedDocumentId={documentId}
+            />
             <button
                 id="theme-toggle-button"
                 type="button"
@@ -315,6 +318,7 @@ function Search({ theme, onToggleTheme }: SearchProps) {
                 <Dropzone
                     theme={theme}
                     documentId={documentId}
+                    loggedIn={loggedIn}
                     selectedPage={selectedPage}
                     selectedChunkBBox={selectedChunkBBox}
                     onDocumentChange={handleDocumentSelect}

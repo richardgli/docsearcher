@@ -4,9 +4,10 @@ import { Menu, Trash2 } from "lucide-react";
 
 type HistorybarProps = {
     onSelectDocument: (id: string | null) => void;
+    selectedDocumentId: string | null;
 }
 
-export default function Historybar({ onSelectDocument }: HistorybarProps) {
+export default function Historybar({ onSelectDocument, selectedDocumentId }: HistorybarProps) {
     const menuButtonRef = useRef<HTMLButtonElement>(null);
     const sidebarContentRef = useRef<HTMLDivElement>(null);
     const [isOpen, setIsOpen] = useState(false);
@@ -109,6 +110,29 @@ export default function Historybar({ onSelectDocument }: HistorybarProps) {
         setIsOpen(false);
     };
 
+    const refreshDocuments = async () => {
+        if (!isOpen) return;
+
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/documents`, {
+                credentials: "include",
+            });
+
+            if (!response.ok) {
+                setDocuments([]);
+                return;
+            }
+
+            const payload = await response.json();
+            setDocuments(payload?.documents ?? []);
+        } catch {
+            setDocuments([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleDeleteDocument = async (id: string) => {
         try {
             const response = await fetch(`${BACKEND_URL}/api/documents/${id}`, {
@@ -120,6 +144,8 @@ export default function Historybar({ onSelectDocument }: HistorybarProps) {
                 const message = await response.text();
                 throw new Error(message || "Failed to delete PDF.");
             }
+
+            await refreshDocuments();
         } catch (error) {
             throw new Error("Failed to delete PDF.");
         }
@@ -202,22 +228,26 @@ export default function Historybar({ onSelectDocument }: HistorybarProps) {
                             {!isLoading && documents.length === 0 && (
                                 <li className="history-empty">No documents yet.</li>
                             )}
-                            {documents.map((doc) => (
-                                <li key={doc.id}>
-                                    <button onClick={() => handleHistoryItemClick(doc.id)}>
-                                        <span>{doc.filename}</span>
-                                        <small>
-                                            {new Date(doc.created_at).toLocaleString()}
-                                        </small>
-                                    </button>
-                                    <Trash2
-                                        size={20}
-                                        strokeWidth={1.5}
-                                        style={{cursor: "pointer"}}
-                                        onClick={() => handleDeleteDocument(doc.id)}
-                                    />
-                                </li>
-                            ))}
+                            {documents.map((doc) => {
+                                const isSelected = doc.id === selectedDocumentId;
+
+                                return (
+                                    <li key={doc.id} className={isSelected ? "is-selected" : ""}>
+                                        <button onClick={() => handleHistoryItemClick(doc.id)}>
+                                            <span>{doc.filename}</span>
+                                            <small>
+                                                {new Date(doc.created_at).toLocaleString()}
+                                            </small>
+                                        </button>
+                                        <Trash2
+                                            size={20}
+                                            strokeWidth={1.5}
+                                            style={{cursor: "pointer"}}
+                                            onClick={() => handleDeleteDocument(doc.id)}
+                                        />
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
                 </div>
