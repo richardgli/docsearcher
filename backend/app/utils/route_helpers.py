@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 import os
 import uuid
+from types import SimpleNamespace
 from typing import Any
 from openai import OpenAI
 from starlette.requests import Request
@@ -134,6 +135,37 @@ def write_guest_document(guest_documents: dict[str, dict[str, Any]], request: Re
     }
     request.session["guest_document_id"] = guest_doc_id
     return guest_docs[guest_doc_id]
+
+
+def migrate_guest_document_to_user(
+    guest_documents: dict[str, dict[str, Any]],
+    request: Request,
+    client: Client,
+    user_id: uuid.UUID,
+    session: Session,
+) -> dict[str, Any] | None:
+    guest_id = request.session.get("guest_user_id")
+    guest_doc_id = request.session.get("guest_document_id")
+    if not guest_id or not guest_doc_id:
+        return None
+
+    guest_docs = guest_documents.get(str(guest_id), {})
+    guest_doc = guest_docs.get(str(guest_doc_id))
+    if guest_doc is None:
+        return None
+
+    file_like = SimpleNamespace(filename=guest_doc["filename"])
+    created_doc = get_or_create_document(client, session, user_id, file_like, guest_doc["bytes"])
+
+    guest_documents.pop(str(guest_id), None)
+    request.session.pop("guest_user_id", None)
+    request.session.pop("guest_document_id", None)
+
+    return {
+        "document_id": str(created_doc.id),
+        "filename": created_doc.filename,
+        "bytes": guest_doc["bytes"],
+    }
 
 
 def get_guest_document(guest_documents: dict[str, dict[str, Any]], request: Request, document_id: str | uuid.UUID) -> dict[str, Any] | None:

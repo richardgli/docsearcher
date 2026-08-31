@@ -26,7 +26,8 @@ from backend.app.utils.route_helpers import (
     file_exists_in_storage,
     get_or_create_document,
     delete_document,
-    get_guest_document, 
+    get_guest_document,
+    migrate_guest_document_to_user,
     write_guest_document,
     search_guest_document,
 )
@@ -84,8 +85,15 @@ async def auth(request: Request):
 
         # Return existing user if found in database; otherwise create new user
         user = ser.get_or_create(userinfo['email'], userinfo.get('name'))
-        
-    request.session["user"] = {"id": str(user.id), "email": user.email, "name": user.name}
+        request.session["user"] = {"id": str(user.id), "email": user.email, "name": user.name}
+
+        migrate_guest_document_to_user(
+            GUEST_DOCUMENTS,
+            request,
+            supabase,
+            user.id,
+            session,
+        )
 
     FRONTEND_URL = os.getenv('FRONTEND_URL')
     return RedirectResponse(f'{FRONTEND_URL}/')
@@ -99,9 +107,8 @@ async def logout(request: Request):
 @app.get('/api/me')
 async def me(request: Request):
     user = request.session.get("user")
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return user
+    if user:
+        return user
 
 @app.get('/api/documents')
 async def documents(request: Request):
