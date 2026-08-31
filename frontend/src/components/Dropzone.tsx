@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { gsap } from "gsap";
 import { Upload, Plus, Minus, ChevronLeft, ChevronRight } from "lucide-react";
+import GuestSaveDialog from "./GuestSaveDialog";
 // import worker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -12,12 +13,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 type DropzoneProps = {
     theme: "light" | "dark";
     documentId: string | null;
+    loggedIn: boolean;
     selectedPage: number | null;
     selectedChunkBBox: [number, number, number, number] | null;
     onDocumentChange: (documentId: string | null) => void;
 };
 
-export default function Dropzone({ theme, documentId, selectedPage, selectedChunkBBox, onDocumentChange }: DropzoneProps) {
+export default function Dropzone({ theme, documentId, loggedIn, selectedPage, selectedChunkBBox, onDocumentChange }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -29,6 +31,14 @@ export default function Dropzone({ theme, documentId, selectedPage, selectedChun
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [pageViewports, setPageViewports] = useState<Record<number, any>>({});
+    const [showGuestSaveDialog, setShowGuestSaveDialog] = useState(false);
+    const [hasSeenGuestSaveDialog, setHasSeenGuestSaveDialog] = useState(() => {
+        try {
+            return window.localStorage.getItem("guest-save-dialog-seen") === "true";
+        } catch {
+            return false;
+        }
+    });
     const loadedDocumentIdRef = useRef<string | null>(null);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
     const dropzoneBaseColor = theme === "dark" ? "#1b1f27" : "#d5d5d5";
@@ -185,6 +195,17 @@ export default function Dropzone({ theme, documentId, selectedPage, selectedChun
             setUploadError("Backend URL is not configured.");
             return;
         }
+
+        if (!loggedIn && !hasSeenGuestSaveDialog) {
+            setShowGuestSaveDialog(true);
+            setHasSeenGuestSaveDialog(true);
+            try {
+                window.localStorage.setItem("guest-save-dialog-seen", "true");
+            } catch {
+                // Ignore storage failures and continue with upload.
+            }
+        }
+
         setPDF(file);
         setCurrentPage(1);
         setPageInput("1");
@@ -321,6 +342,16 @@ export default function Dropzone({ theme, documentId, selectedPage, selectedChun
 
     return (
         <>
+            <GuestSaveDialog
+                theme={theme}
+                open={showGuestSaveDialog}
+                onClose={() => setShowGuestSaveDialog(false)}
+                onLogin={() => {
+                    setShowGuestSaveDialog(false);
+                    window.location.href = `${BACKEND_URL}/api/login`;
+                }}
+            />
+
             <div className="drop-zone-container">
 
                 <div id="drop-zone" 
