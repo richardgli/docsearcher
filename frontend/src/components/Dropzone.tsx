@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { gsap } from "gsap";
 import { Upload, Plus, Minus, ChevronLeft, ChevronRight } from "lucide-react";
+import GuestSaveDialog from "./GuestSaveDialog";
 // import worker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
@@ -12,10 +13,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.vers
 type DropzoneProps = {
     theme: "light" | "dark";
     documentId: string | null;
+    loggedIn: boolean;
+    selectedPage: number | null;
+    selectedChunkBBox: [number, number, number, number] | null;
     onDocumentChange: (documentId: string | null) => void;
 };
 
-export default function Dropzone({ theme, documentId, onDocumentChange }: DropzoneProps) {
+export default function Dropzone({ theme, documentId, loggedIn, selectedPage, selectedChunkBBox, onDocumentChange }: DropzoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
     const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -26,6 +30,15 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
     const [pageScale, setPageScale] = useState(0.75);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [pageViewports, setPageViewports] = useState<Record<number, any>>({});
+    const [showGuestSaveDialog, setShowGuestSaveDialog] = useState(false);
+    const [hasSeenGuestSaveDialog, setHasSeenGuestSaveDialog] = useState(() => {
+        try {
+            return window.localStorage.getItem("guest-save-dialog-seen") === "true";
+        } catch {
+            return false;
+        }
+    });
     const loadedDocumentIdRef = useRef<string | null>(null);
     const pageScales = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
     const dropzoneBaseColor = theme === "dark" ? "#1b1f27" : "#d5d5d5";
@@ -33,7 +46,24 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
     const BACKEND_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
-        if (!documentId || documentId === loadedDocumentIdRef.current) return;
+        if (selectedPage && numPages) {
+            jumpToPage(selectedPage);
+        }
+    }, [selectedPage, numPages]);
+
+    useEffect(() => {
+        if (!documentId) {
+            setPDF(null);
+            setNumPages(0);
+            setCurrentPage(1);
+            setPageInput("1");
+            setPageScale(0.75);
+            setUploadError(null);
+            loadedDocumentIdRef.current = null;
+            return;
+        }
+
+        if (documentId === loadedDocumentIdRef.current) return;
 
         let ignore = false;
         
@@ -50,7 +80,7 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
                     const message = await response.text();
                     throw new Error(message || "Failed to upload PDF.");
                 }
-                console.log(response);
+
                 const blob = await response.blob();
                 const file = new File([blob], "document.pdf", { type: "application/pdf" });
 
@@ -76,7 +106,7 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
         return () => {
             ignore = true;
         };
-    }, [documentId, BACKEND_URL])
+    }, [documentId, BACKEND_URL]);
 
     useEffect(() => {
         if (!dropZoneRef.current) return;
@@ -128,7 +158,7 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
     }, [currentPage]);
 
     const jumpToPage = (pageNumber: number) => {
-        if (!numPages) return;
+        if (!numPages || !dropZoneRef.current) return;
 
         const clampedPage = Math.min(Math.max(pageNumber, 1), numPages);
         const targetPage = pageRefs.current[clampedPage - 1];
@@ -136,10 +166,10 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
         setCurrentPage(clampedPage);
         setPageInput(String(clampedPage));
 
-        targetPage?.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-        });
+        if (targetPage) {
+            const offsetTop = targetPage.offsetTop - dropZoneRef.current.offsetTop;
+            dropZoneRef.current.scrollTo({ top: offsetTop, behavior: "smooth" });
+        }
     };
 
     const goToPreviousPage = () => {
@@ -176,6 +206,17 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
             setUploadError("Backend URL is not configured.");
             return;
         }
+
+        if (!loggedIn && !hasSeenGuestSaveDialog) {
+            setShowGuestSaveDialog(true);
+            setHasSeenGuestSaveDialog(true);
+            try {
+                window.localStorage.setItem("guest-save-dialog-seen", "true");
+            } catch {
+                // Ignore storage failures and continue with upload.
+            }
+        }
+
         setPDF(file);
         setCurrentPage(1);
         setPageInput("1");
@@ -267,8 +308,61 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
         }
     };
 
+    function BBoxHighlight({
+        bbox,
+        viewport,
+    }: {
+        bbox: [number, number, number, number];
+        viewport: any;
+    }) {
+        if (!viewport) return null;
+
+        const [x0, y0, x1, y1] = bbox;
+
+        // Converting PyMuPDF coordinates to convertToViewportRectangle coordinates
+        const pageHeightPts = viewport.height / viewport.scale;
+        const flipped: [number, number, number, number] = [
+            x0,
+            pageHeightPts - y1,
+            x1,
+            pageHeightPts - y0,
+        ];
+
+        const [vx0, vy0, vx1, vy1] = viewport.convertToViewportRectangle(flipped);
+        const left = Math.min(vx0, vx1);
+        const top = Math.min(vy0, vy1);
+        const width = Math.abs(vx1 - vx0);
+        const height = Math.abs(vy1 - vy0);
+
+        return (
+            <div
+                style={{
+                    position: "absolute",
+                    left,
+                    top,
+                    width,
+                    height,
+                    backgroundColor: "rgba(255, 214, 0, 0.35)",
+                    border: "1.5px solid rgba(255, 179, 0, 0.8)",
+                    borderRadius: 2,
+                    pointerEvents: "none",
+                }}
+            />
+        );
+    }
+
     return (
         <>
+            <GuestSaveDialog
+                theme={theme}
+                open={showGuestSaveDialog}
+                onClose={() => setShowGuestSaveDialog(false)}
+                onLogin={() => {
+                    setShowGuestSaveDialog(false);
+                    window.location.href = `${BACKEND_URL}/api/login`;
+                }}
+            />
+
             <div className="drop-zone-container">
 
                 <div id="drop-zone" 
@@ -361,17 +455,33 @@ export default function Dropzone({ theme, documentId, onDocumentChange }: Dropzo
                             setPageInput("1");
                         }}>
                             <div className="pdf-pages">
-                                {Array.from({ length: numPages }, (_, index) => (
-                                    <div
-                                        key={`pdf-page-${index + 1}`}
-                                        className="pdf-page-wrapper"
-                                        ref={(element) => {
-                                            pageRefs.current[index] = element;
-                                        }}
-                                    >
-                                        <Page pageNumber={index + 1} scale={pageScale} />
-                                    </div>
-                                ))}
+                                {Array.from({ length: numPages }, (_, index) => {
+                                    const pageNumber = index + 1;
+                                    return (
+                                        <div
+                                            key={`pdf-page-${pageNumber}`}
+                                            className="pdf-page-wrapper"
+                                            ref={(element) => {
+                                                pageRefs.current[index] = element;
+                                            }}
+                                        >
+                                            <Page
+                                                pageNumber={pageNumber}
+                                                scale={pageScale}
+                                                onLoadSuccess={(page) => {
+                                                    const viewport = page.getViewport({ scale: pageScale });
+                                                    setPageViewports((prev) => ({ ...prev, [pageNumber]: viewport }));
+                                                }}
+                                            />
+                                            {selectedPage === pageNumber && selectedChunkBBox && (
+                                                <BBoxHighlight
+                                                    bbox={selectedChunkBBox}
+                                                    viewport={pageViewports[pageNumber]}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </Document>
                     )}
