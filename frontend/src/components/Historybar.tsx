@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { Menu, Trash2 } from "lucide-react";
+import { Menu, Trash2, Clock, Inbox } from "lucide-react";
 
 type HistorybarProps = {
     onSelectDocument: (id: string | null) => void;
@@ -225,12 +225,30 @@ export default function Historybar({ onSelectDocument, selectedDocumentId }: His
                 onClick={isOpen ? undefined : handleMenuClick}
             >
                 <div className="sidebar-content" id={isOpen ? "" : "pointer"}>
-                    <p>Recent docs</p>
+                    <h2 className="sidebar-header">
+                        <span className="sidebar-header__icon">
+                            <Clock size={18} strokeWidth={2} />
+                        </span>
+                        Recent docs
+                    </h2>
                     {isOpen && (
                         <ul className="history-list">
-                            {isLoading && <li className="history-empty">Loading documents...</li>}
+                            {isLoading && (
+                                <li className="history-empty">
+                                    <span className="history-empty__spinner" aria-hidden="true" />
+                                    Loading documents…
+                                </li>
+                            )}
                             {!isLoading && documents.length === 0 && (
-                                <li className="history-empty">No documents yet.</li>
+                                <li className="history-empty">
+                                    <span className="history-empty__icon">
+                                        <Inbox size={28} strokeWidth={1.5} />
+                                    </span>
+                                    <span className="history-empty__title">No documents yet</span>
+                                    <span className="history-empty__hint">
+                                        Uploaded PDFs will appear here
+                                    </span>
+                                </li>
                             )}
                             {documents.map((doc) => {
                                 const isSelected = doc.id === selectedDocumentId;
@@ -238,17 +256,21 @@ export default function Historybar({ onSelectDocument, selectedDocumentId }: His
                                 return (
                                     <li key={doc.id} className={isSelected ? "is-selected" : ""}>
                                         <button onClick={() => handleHistoryItemClick(doc.id)}>
-                                            <span>{doc.filename}</span>
-                                            <small>
-                                                {new Date(doc.created_at).toLocaleString()}
-                                            </small>
+                                            <span className="history-item__text">
+                                                <span className="history-item__name">{doc.filename}</span>
+                                                <small className="history-item__date">
+                                                    {new Date(doc.created_at).toLocaleString()}
+                                                </small>
+                                            </span>
                                         </button>
-                                        <Trash2
-                                            size={20}
-                                            strokeWidth={1.5}
-                                            style={{cursor: "pointer"}}
+                                        <button
+                                            type="button"
+                                            className="history-item__delete"
+                                            aria-label={`Delete ${doc.filename}`}
                                             onClick={() => handleDeleteDocument(doc.id)}
-                                        />
+                                        >
+                                            <Trash2 size={20} strokeWidth={1.5} />
+                                        </button>
                                     </li>
                                 );
                             })}
