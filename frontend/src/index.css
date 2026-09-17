@@ -75,6 +75,7 @@ body {
     border-radius: 25px;
     font-family: var(--font-family);
     font-size: 1rem;
+    font-weight: 700;
     color: var(--page-text);
     cursor: pointer;
     z-index: 10;
@@ -378,12 +379,26 @@ body {
     width: 40vw;
     height: 80vh;
     border: 3px solid;
-    /* border-radius: 5%; */
     justify-content: center;
     align-items: center;
     user-select: none;    
     box-sizing: border-box;
     transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+}
+
+#drop-zone.no-pdf {
+    position: relative;
+    border: 2px dashed color-mix(in srgb, var(--border-color) 45%, transparent);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: background-color 0.35s ease, border-color 0.35s ease,
+        color 0.35s ease, box-shadow 0.35s ease, transform 0.25s ease;
+}
+
+#drop-zone.no-pdf:hover {
+    cursor: pointer;
+    border-color: color-mix(in srgb, var(--border-color) 75%, transparent);
+    transform: translateY(-2px);
 }
 
 #drop-zone.has-pdf {
@@ -408,14 +423,79 @@ body {
     margin: 2vh 0;
 }
 
-#drop-zone p {
-    max-width: 18vw;
-    font-size: clamp(8px, 2vw, 16px);
+.dropzone-empty {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem;
     text-align: center;
+    pointer-events: none;
 }
 
-#drop-zone.no-pdf:hover {
-    cursor: pointer;
+.dropzone-empty__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    margin-bottom: 0.5rem;
+    border-radius: 50%;
+    color: var(--page-text);
+    background: var(--search-gradient);
+    background-size: 200% 200%;
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--border-color) 22%, transparent);
+    animation: dropzone-float 4s ease-in-out infinite;
+}
+
+#drop-zone.no-pdf:hover .dropzone-empty__icon {
+    animation: dropzone-float 4s ease-in-out infinite,
+        dropzone-gradient 3s ease infinite;
+}
+
+.dropzone-empty__title {
+    max-width: none;
+    font-size: clamp(16px, 1.6vw, 22px);
+    font-weight: 700;
+    color: var(--page-text);
+}
+
+.dropzone-empty__subtitle {
+    max-width: 22vw;
+    font-size: clamp(11px, 1.1vw, 14px);
+    line-height: 1.5;
+    color: var(--page-text);
+    opacity: 0.7;
+}
+
+.dropzone-empty__link {
+    font-weight: 700;
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+@keyframes dropzone-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes dropzone-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dropzone-empty__icon,
+    #drop-zone.no-pdf:hover .dropzone-empty__icon {
+        animation: none;
+    }
+    #drop-zone.no-pdf:hover {
+        transform: none;
+    }
 }
 
 .pdf-page-wrapper {
@@ -660,6 +740,7 @@ body {
 
 #title {
     font-size: clamp(8px, 5vw, 320px);
+    font-weight: 600;
 }
 
 #subtitle {
