@@ -75,6 +75,7 @@ body {
     border-radius: 25px;
     font-family: var(--font-family);
     font-size: 1rem;
+    font-weight: 700;
     color: var(--page-text);
     cursor: pointer;
     z-index: 10;
@@ -378,12 +379,26 @@ body {
     width: 40vw;
     height: 80vh;
     border: 3px solid;
-    /* border-radius: 5%; */
     justify-content: center;
     align-items: center;
     user-select: none;    
     box-sizing: border-box;
     transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease;
+}
+
+#drop-zone.no-pdf {
+    position: relative;
+    border: 2px dashed color-mix(in srgb, var(--border-color) 45%, transparent);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: background-color 0.35s ease, border-color 0.35s ease,
+        color 0.35s ease, box-shadow 0.35s ease, transform 0.25s ease;
+}
+
+#drop-zone.no-pdf:hover {
+    cursor: pointer;
+    border-color: color-mix(in srgb, var(--border-color) 75%, transparent);
+    transform: translateY(-2px);
 }
 
 #drop-zone.has-pdf {
@@ -408,14 +423,79 @@ body {
     margin: 2vh 0;
 }
 
-#drop-zone p {
-    max-width: 18vw;
-    font-size: clamp(8px, 2vw, 16px);
+.dropzone-empty {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem;
     text-align: center;
+    pointer-events: none;
 }
 
-#drop-zone.no-pdf:hover {
-    cursor: pointer;
+.dropzone-empty__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    margin-bottom: 0.5rem;
+    border-radius: 50%;
+    color: var(--page-text);
+    background: var(--search-gradient);
+    background-size: 200% 200%;
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--border-color) 22%, transparent);
+    animation: dropzone-float 4s ease-in-out infinite;
+}
+
+#drop-zone.no-pdf:hover .dropzone-empty__icon {
+    animation: dropzone-float 4s ease-in-out infinite,
+        dropzone-gradient 3s ease infinite;
+}
+
+.dropzone-empty__title {
+    max-width: none;
+    font-size: clamp(16px, 1.6vw, 22px);
+    font-weight: 700;
+    color: var(--page-text);
+}
+
+.dropzone-empty__subtitle {
+    max-width: 22vw;
+    font-size: clamp(11px, 1.1vw, 14px);
+    line-height: 1.5;
+    color: var(--page-text);
+    opacity: 0.7;
+}
+
+.dropzone-empty__link {
+    font-weight: 700;
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+@keyframes dropzone-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes dropzone-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dropzone-empty__icon,
+    #drop-zone.no-pdf:hover .dropzone-empty__icon {
+        animation: none;
+    }
+    #drop-zone.no-pdf:hover {
+        transform: none;
+    }
 }
 
 .pdf-page-wrapper {
@@ -660,6 +740,7 @@ body {
 
 #title {
     font-size: clamp(8px, 5vw, 320px);
+    font-weight: 600;
 }
 
 #subtitle {
@@ -692,7 +773,6 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 15;
-    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .sidebar-overlay {
@@ -726,9 +806,25 @@ body {
 .sidebar-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 1.5rem;
-    border-bottom: 2px solid;
+    gap: 0.65rem;
+    padding: 1rem 1rem;
+    border-bottom: 2px solid var(--border-color);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--page-text);
+}
+
+.sidebar-header__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    color: var(--page-text);
+    background: color-mix(in srgb, var(--border-color) 10%, transparent);
+    background-size: 200% 200%;
+    flex-shrink: 0;
 }
 
 .sidebar-header h2 {
@@ -747,8 +843,11 @@ body {
 
 .history-list {
     list-style: none;
-    padding: 0;
+    padding: 0.5rem 0.6rem;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
 #pointer { 
@@ -759,15 +858,18 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.35rem;
     margin: 0;
-    padding-right: 0.75rem;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    padding: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .history-list li:not(.history-empty):hover {
     background: var(--hover-surface);
-    transform: translateX(2px);
+    transform: translateX(3px);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--border-color) 12%, transparent);
 }
 
 .history-list li:not(.history-empty):hover::before,
@@ -777,7 +879,8 @@ body {
     left: 0;
     top: 0;
     bottom: 0;
-    width: 10px;
+    width: 4px;
+    border-radius: 4px;
     background: var(--search-gradient);
 }
 
@@ -785,10 +888,12 @@ body {
     background: var(--hover-surface);
 }
 
-.history-list li button {
+.history-list li > button:first-child {
     position: relative;
     flex: 1;
     width: 100%;
+    display: flex;
+    align-items: center;
     padding: 0.75rem 0.5rem 0.75rem 1.5rem;
     background: none;
     border: none;
@@ -796,28 +901,120 @@ body {
     cursor: pointer;
     font-family: var(--font-family);
     font-size: 0.95rem;
-    transition: all 0.2s ease;
-}
-
-.history-list li > svg {
-    flex-shrink: 0;
-    margin-left: auto;
     color: var(--page-text);
-    opacity: 0.8;
+    transition: color 0.2s ease;
+    min-width: 0;
 }
 
-/* Stack filename and date on separate lines inside history list items */
-.history-list li button > span {
+.history-item__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+}
+
+.history-item__name {
     display: block;
     font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.history-list li button > small {
+.history-item__date {
     display: block;
-    margin-top: 0.25rem;
-    font-size: 0.8rem;
-    opacity: 0.8;
+    margin-top: 0.2rem;
+    font-size: 0.78rem;
+    opacity: 0.65;
     color: var(--page-text);
+}
+
+.history-item__delete {
+    flex: 0 0 auto;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-right: 0.3rem;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--page-text);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.history-list li:hover .history-item__delete,
+.history-item__delete:focus-visible {
+    opacity: 0.7;
+}
+
+.history-item__delete:hover,
+.history-item__delete:focus-visible {
+    opacity: 1;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+}
+
+.history-empty {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--page-text);
+}
+
+.history-empty__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 0.25rem;
+    border-radius: 50%;
+    color: var(--page-text);
+    background: color-mix(in srgb, var(--border-color) 10%, transparent);
+    opacity: 0.75;
+}
+
+.history-empty__title {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.history-empty__hint {
+    font-size: 0.78rem;
+    opacity: 0.6;
+}
+
+.history-empty__spinner {
+    width: 1.1rem;
+    height: 1.1rem;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--border-color) 30%, transparent);
+    border-top-color: var(--page-text);
+    animation: history-spin 0.7s linear infinite;
+}
+
+@keyframes history-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .history-list li:not(.history-empty):hover {
+        transform: none;
+    }
+    .history-empty__spinner {
+        animation-duration: 1.5s;
+    }
 }
 
 .sidebar-content p {

@@ -444,8 +444,17 @@ export default function Dropzone({ theme, documentId, loggedIn, selectedPage, se
                             </button>
                         </div>
                     </div>
-                    <Upload size={65} strokeWidth={1} className={PDF ? "has-pdf" : ""} />
-                    <p className={PDF ? "has-pdf" : ""}>Upload file from computer or drag and drop file</p>
+                    {!PDF && (
+                        <div className="dropzone-empty">
+                            <div className="dropzone-empty__icon">
+                                <Upload size={40} strokeWidth={1.5} />
+                            </div>
+                            <p className="dropzone-empty__title">Drop your PDF here</p>
+                            <p className="dropzone-empty__subtitle">
+                                <span className="dropzone-empty__link">Upload</span> file from computer or drag and drop file
+                            </p>
+                        </div>
+                    )}
                     {isUploading && <p className="upload-status">Uploading PDF…</p>}
                     {uploadError && <p className="upload-error">{uploadError}</p>}
                     {PDF && (
