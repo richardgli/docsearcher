@@ -122,6 +122,44 @@ function Search({ theme, onToggleTheme }: SearchProps) {
         }
     }, [loggedIn]);
 
+    useEffect(() => {
+        if (!loggedIn) return;
+
+        const idleMinutes = Number(import.meta.env.SESSION_IDLE_MINUTES) || 30;
+        const IDLE_MS = idleMinutes * 60 * 1000;
+        let timer: number;
+
+        const logout = () => {
+            window.location.href = `${BACKEND_URL}/api/logout`;
+        };
+
+        const reset = () => {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(logout, IDLE_MS);
+        };
+
+        const activityEvents: Array<keyof WindowEventMap> = [
+            "mousemove",
+            "mousedown",
+            "keydown",
+            "click",
+            "scroll",
+            "touchstart",
+        ];
+
+        activityEvents.forEach((event) =>
+            window.addEventListener(event, reset, { passive: true })
+        );
+        reset();
+
+        return () => {
+            window.clearTimeout(timer);
+            activityEvents.forEach((event) =>
+                window.removeEventListener(event, reset)
+            );
+        };
+    }, [loggedIn, BACKEND_URL]);
+
     const handleSearch = async (nextQuery: string) => {
         const trimmedQuery = nextQuery.trim();
         if (!trimmedQuery) {
